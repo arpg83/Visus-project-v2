@@ -4,7 +4,6 @@ import com.ideadistribuidora.visus.data.Proveedores;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.Endpoint;
 import com.vaadin.hilla.exception.EndpointException;
-import java.util.Optional;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +22,9 @@ public class ProveedoresEndpoint {
         return service.list(page);
     }
 
-    public Optional<Proveedores> get(Long id) {
-        return service.get(id);
-    }
+    // public Optional<Proveedores> get(Long id) {
+    // return service.get(id);
+    // }
 
     public Proveedores update(Proveedores entity) {
         try {
@@ -35,7 +34,7 @@ public class ProveedoresEndpoint {
         }
     }
 
-    public void delete(Long id) {
+    public void delete(int id) {
         service.delete(id);
     }
 

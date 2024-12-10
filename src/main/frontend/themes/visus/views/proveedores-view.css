@@ -41,4 +41,16 @@
 
 .proveedores-view .grid-wrapper {
   width: 100%;
+  height: 40%;
 }
+
+.proveedores-view .grid-wrapper2 {
+  width: 100%;
+  height: 20%;
+}
+
+.proveedores-view .grid-wrapper3 {
+  width: 100%;
+  height: 20%;
+}
+

@@ -23,7 +23,7 @@ public class ClientesEndpoint {
         return service.list(page);
     }
 
-    public Optional<Clientes> get(Long id) {
+    public Optional<Clientes> get(int id) {
         return service.get(id);
     }
 
@@ -35,7 +35,7 @@ public class ClientesEndpoint {
         }
     }
 
-    public void delete(Long id) {
+    public void delete(int id) {
         service.delete(id);
     }
 
