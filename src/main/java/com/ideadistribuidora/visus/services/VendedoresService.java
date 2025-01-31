@@ -148,6 +148,10 @@ public class VendedoresService {
         return repository.findZonasByIdVendedor(idVendedor);
     }
 
+    public Set<Comisiones> getComisionesByIdVendedores(int idVendedor) {
+        return repository.findComisionesByIdVendedor(idVendedor);
+    }
+
     
    
 

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.ideadistribuidora.visus.data.Comisiones;
 import com.ideadistribuidora.visus.data.Vendedores;
 import com.ideadistribuidora.visus.data.Zonas;
 
@@ -16,4 +17,7 @@ public interface VendedoresRepository extends JpaRepository<Vendedores, Integer>
     
     @Query("SELECT v.zonas FROM Vendedores v WHERE v.idVendedor = :idVendedor")
     Set<Zonas> findZonasByIdVendedor(@Param("idVendedor") int idVendedor);
+
+    @Query("SELECT v.comisiones FROM Vendedores v WHERE v.idVendedor = :idVendedor")
+    Set<Comisiones> findComisionesByIdVendedor(@Param("idVendedor") int idVendedor);
 }

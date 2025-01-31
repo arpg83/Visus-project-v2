@@ -1,5 +1,8 @@
 package com.ideadistribuidora.visus.views.dialogs;
 
+import java.math.BigDecimal;
+import java.util.Locale;
+
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import com.ideadistribuidora.visus.data.Comisiones;
@@ -26,7 +29,6 @@ public class DialogSaveEditComisiones extends Dialog {
     private Button saveComisionesButton;
     private Button cancelComisionesButton;
     private Comisiones comisiones;
-    private TipoComisionEnum[] allTipoComision;
 
     public DialogSaveEditComisiones(String header,
             Comisiones comisionesSelected, ConfirmationHandler<Comisiones> onConfirm) {
@@ -39,7 +41,7 @@ public class DialogSaveEditComisiones extends Dialog {
         saveComisionesButton.setEnabled(false);
         cancelComisionesButton = new Button("Cancelar");
         getFooter().add(cancelComisionesButton);
-        getFooter().add(cancelComisionesButton);
+        getFooter().add(saveComisionesButton);
 
         VerticalLayout dialogLayout = createDialogLayout(comisionesSelected, onConfirm);
         add(dialogLayout);
@@ -58,15 +60,23 @@ public class DialogSaveEditComisiones extends Dialog {
         Binder<Comisiones> binder = new Binder<>(Comisiones.class);
         ComboBox<TipoComisionEnum> tipoComisionesEnum = new ComboBox<>("Tipo de Comisión");
         tipoComisionesEnum.setPlaceholder("Seleccione Tipo de Comisión");
-        tipoComisionesEnum.setItems(allTipoComision);
+        tipoComisionesEnum.setItems(TipoComisionEnum.values());
         tipoComisionesEnum.setItemLabelGenerator(TipoComisionEnum::getDisplayTipoComision);
         DateTimePicker fechaModificacion = new DateTimePicker("Fecha de Modificación");
         fechaModificacion.setDatePickerI18n(ComponentUtils.getI18n());
+        fechaModificacion.setLocale(Locale.US);
         DateTimePicker vigenciaDesde = new DateTimePicker("Vigencia Desde");
         vigenciaDesde.setDatePickerI18n(ComponentUtils.getI18n());
+        vigenciaDesde.setLocale(Locale.US);
         DateTimePicker vigenciaHasta = new DateTimePicker("Vigencia Hasta");
         vigenciaHasta.setDatePickerI18n(ComponentUtils.getI18n());
+        vigenciaHasta.setLocale(Locale.US);
         BigDecimalField porcentajeSobreImporte = new BigDecimalField("Porcentual Sobre Importe");
+        porcentajeSobreImporte.setValue(BigDecimal.ZERO);
+        // porcentajeSobreImporte.setRequired(true);
+        // porcentajeSobreImporte.setRequiredIndicatorVisible(true);
+        // porcentajeSobreImporte.setErrorMessage("Porcentual sobre Importe es Requerido");
+
         BigDecimalField porcentajeImporteFijo = new BigDecimalField("Porcentual Sobre Importe Fijo");
         BigDecimalField porcentajeSobreMargen = new BigDecimalField("Porcentual Sobre Margen");
         binder.forField(tipoComisionesEnum).asRequired("Tipo de Comisión es Requerido")

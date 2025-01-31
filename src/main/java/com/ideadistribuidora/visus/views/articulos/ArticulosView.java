@@ -265,7 +265,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 binder.forField(precioFinalConIva).bind("precioFinalConIva");
                 binder.forField(fechaActPrecios).asRequired("Fecha de Última Actualización de Precios es Requerido")
                                 .bind("fecha_actPrecios");
-                binder.forField(fechaCompra).asRequired("Fecha ültima Compra es Requerido")
+                binder.forField(fechaCompra).asRequired("Fecha última Compra es Requerido")
                                 .bind("fecha_compra");
                 binder.forField(fechaVencimiento).bind("fecha_vencimiento");
                 binder.forField(fechaBaja).bind("fecha_baja");

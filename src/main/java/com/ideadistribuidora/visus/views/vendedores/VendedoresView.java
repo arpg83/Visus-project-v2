@@ -184,6 +184,8 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                                 zonaList = vendedoresService.getZonasByIdVendedores(event.getValue().getIdVendedor());
                                 gridZonas.setItems(zonaList);
                                 addComisionesButton.setEnabled(true);
+                                comisionesList = vendedoresService.getComisionesByIdVendedores(event.getValue().getIdVendedor());
+                                gridComisiones.setItems(comisionesList);
                                                                 
                                 delete.setEnabled(true);
                         } else {
@@ -232,10 +234,16 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                 gridComisiones.addColumn(comisiones -> comisiones.getPorcentajeSobreMargen()).setHeader("Sobre Margen")
                                 .setAutoWidth(true);
                 gridComisiones.addComponentColumn(comisiones -> {
-                        Button tramosButton = new Button("Tramos");
-                        tramosButton.addClickListener(e -> {
-                                Notification.show("Tramos");
-                        });
+                        Button tramosButton;
+                        if("Escalonada".equals(comisiones.getTipoComision().getDisplayTipoComision())){
+                                tramosButton = new Button("Ver Tramos");
+                                tramosButton.addClickListener(e -> {
+                                        Notification.show("Ver Tramos");
+                                });
+                        }else{
+                                tramosButton = new Button("No Posee");
+                                tramosButton.setEnabled(false);
+                        }
                         return tramosButton;
                 }).setHeader("Bonificado")
                                 .setAutoWidth(true);
@@ -607,9 +615,13 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                 wrapper.setClassName("grid-wrapper");
                 H4 h4GridComisiones = new H4("Comisiones");
                 h4GridComisiones.getStyle().set("margin-left", "20px");
+                h4ComiWarning.getStyle().setColor("red");
+                h4ComiWarning.setVisible(comisionesChanges);
+                HorizontalLayout headComisionesLayot = new HorizontalLayout();
+                headComisionesLayot.add(h4GridComisiones, h4ComiWarning);
                 HorizontalLayout buttonComisionesLayot = new HorizontalLayout();
                 createHorizontalComisionesButtonDomLayout(buttonComisionesLayot);
-                wrapper.add(h4GridComisiones, gridComisiones, buttonComisionesLayot);
+                wrapper.add(headComisionesLayot, gridComisiones, buttonComisionesLayot);
                 principalLayout.add(wrapper);
         }
 
@@ -723,7 +735,7 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
         private void deleteComisionesFunction() {
                 comisionesList.remove(comisionesSelected);
                 this.vendedores.setComisiones(comisionesList);
-                // clientesService.update(this.clientes);
+                vendedoresService.update(this.vendedores);
                 vendedoresService.deleteComisionesById(comisionesSelected.getIdComision());
                 gridComisiones.getDataProvider().refreshAll();
                 addComisionesButton.setEnabled(true);
@@ -750,14 +762,14 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
         private void confirmSaveEditComisionesFunction(Comisiones comisiones) {
                 if (comisionesSelected != null) {
                         comisionesMod = comisiones;
-                        new DialogConfirmacion("¿Está seguro que desea Modificar estos datos Bancarios?",
+                        new DialogConfirmacion("¿Está seguro que desea Modificar esta Comisión?",
                                         this::saveEditComisionesFunction);
                 } else {
                         comisionesList.add(comisiones);
-                        gridComisiones.getDataProvider().refreshAll();
+                        gridComisiones.setItems(comisionesList);
                         comisionesChanges = true;
                         h4ComiWarning.setVisible(comisionesChanges);
-                        dialogSaveEditZonas.close();
+                        dialogSaveEditComisiones.close();
                 }
 
         }
@@ -778,6 +790,7 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                 comisionesList.add(comisionesMod);
                 gridComisiones.getDataProvider().refreshAll();
                 comisionesChanges = true;
+                h4ComiWarning.setVisible(comisionesChanges);
                 dialogSaveEditComisiones.close();
         }
 
