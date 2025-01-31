@@ -28,6 +28,8 @@ const groupMenuItems = (menuItems: readonly Readonly<{ to: string; icon?: string
         displayTitle = 'Clientes';
       } else if (['Proveedores'].includes(title)) {
         displayTitle = 'Proveedores';
+      } else if (['Comisiones','Zonas', 'Vendedores'].includes(title)) {
+        displayTitle = 'Ventas';
       } else if (['Articulos', 'Medidas', 'Presentaciones', 'Depositos', 'Rubros', 'Ubicaciones', 'Lineas'].includes(title)) {
         displayTitle = 'Artículos';
       } else if (['Alicuotas', 'Bancos'].includes(title)) {

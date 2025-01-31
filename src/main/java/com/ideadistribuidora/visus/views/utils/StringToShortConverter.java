@@ -13,13 +13,13 @@ public class StringToShortConverter implements Converter<String, Short> {
             if (value == null || value.isEmpty()) {
                 return Result.ok(null);
             }
-            if (!value.matches("\\d+")) {
-                throw new NumberFormatException();
-            }
+            // if (!value.matches("\\d+")) {
+            //     throw new NumberFormatException();
+            // }
             return Result.ok(Short.valueOf(value));
         } catch (NumberFormatException e) {
-            Notification.show("El valor ingresado no es un número");
-            return Result.error("El valor ingresado no es un número");
+            Notification.show("El valor ingresado es invalido");
+            return Result.error("El valor ingresado es invalido");
         }
     }
 

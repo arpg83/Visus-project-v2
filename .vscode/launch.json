@@ -8,8 +8,7 @@
       "type": "java",
       "name": "Launch Application",
       "request": "launch",
-      "mainClass": "com.ideadistribuidora.visus.Application",
-      "vmArgs": "-Xms1g -Xmx4g"
+      "mainClass": "com.ideadistribuidora.visus.Application"
     },
     {
       "type": "java",
@@ -18,6 +17,16 @@
       "hostName": "localhost",
       "port": 5247,
       "timeout": 40000
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-Application<visus>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.ideadistribuidora.visus.Application",
+      "projectName": "visus",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
     }
   ]
 }

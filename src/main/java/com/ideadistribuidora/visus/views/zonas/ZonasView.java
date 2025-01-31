@@ -1,17 +1,14 @@
-package com.ideadistribuidora.visus.views.localidades;
+package com.ideadistribuidora.visus.views.zonas;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
-import com.ideadistribuidora.visus.data.Departamentos;
-import com.ideadistribuidora.visus.data.Localidades;
-import com.ideadistribuidora.visus.data.Provincias;
-import com.ideadistribuidora.visus.services.LocalidadesService;
+import com.ideadistribuidora.visus.data.Zonas;
+import com.ideadistribuidora.visus.data.enums.VisitaEnum;
+import com.ideadistribuidora.visus.services.ZonasService;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.UserInfo;
@@ -31,7 +28,7 @@ import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.renderer.LitRenderer;
@@ -42,42 +39,36 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-@PageTitle("Localidades")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 23)
-@Route(value = "24/:localidadesID?/:action?(edit)")
-public class LocalidadesView extends Div implements BeforeEnterObserver {
+@PageTitle("Zonas")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 4)
+@Route(value = "5/:zonasID?/:action?(edit)")
+public class ZonasView extends Div implements BeforeEnterObserver {
 
-    private final String LOCALIDADES_ID = "localidadesID";
-    private final String LOCALIDADES_EDIT_ROUTE_TEMPLATE = "24/%s/edit";
+    private final String ZONAS_ID = "zonasID";
+    private final String ZONAS_EDIT_ROUTE_TEMPLATE = "5/%s/edit";
 
-    private final Grid<Localidades> grid = new Grid<>(Localidades.class, false);
+    private final Grid<Zonas> grid = new Grid<>(Zonas.class, false);
 
     CollaborationAvatarGroup avatarGroup;
-
-    private TextField nombre;
-    private ComboBox<Departamentos> departamentos;
-    private IntegerField codigoPostal;
-    private TextField searchLocalidad;
-    private TextField searchDepartamento;
-    private ComboBox<Provincias> provincias;
+    private TextField descripcion;
+    private TextArea areaGeografica;
+    private ComboBox<VisitaEnum> frecuenciaVisita;
+    private TextField searchDescripcion;
 
     private final Button cancel = new Button("Cancelar");
     private final Button save = new Button("Grabar");
     private final Button delete = new Button("ELiminar");
 
-    private CollaborationBinder<Localidades> binder;
+    private CollaborationBinder<Zonas> binder;
 
-    private Localidades localidades;
+    private Zonas zonas;
 
-    private final LocalidadesService localidadesService;
-    private List<Departamentos> departamentosList = new ArrayList<>();
-    private GridListDataView<Localidades> dataView;
-    private List<Provincias> provinciaList = new ArrayList<>();
-    private Provincias provinciaValue = null;
+    private final ZonasService zonasService;
+    GridListDataView<Zonas> dataView;
 
-    public LocalidadesView(LocalidadesService localidadesService) {
-        this.localidadesService = localidadesService;
-        addClassNames("localidades-view");
+    public ZonasView(ZonasService zonasService) {
+        this.zonasService = zonasService;
+        addClassNames("zonas-view");
 
         // UserInfo is used by Collaboration Engine and is used to share details
         // of users to each other to able collaboration. Replace this with
@@ -99,48 +90,34 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         add(splitLayout);
 
         // Configure Grid
-        grid.addColumn(createLocalidadesRenderer()).setHeader("Nombre").setAutoWidth(true);
-        grid.addColumn(Localidades::getCodigoPostal).setHeader("Código Postal").setAutoWidth(true);
-        grid.addColumn(localidades -> localidades.getDepartamentos().getNombre()).setHeader("Departamento")
-                .setAutoWidth(true);
-        grid.addColumn(localidades -> localidades.getProvincias().getProvincia())
-                .setHeader("Provincia").setAutoWidth(true);
-        dataView = grid.setItems(localidadesService.localList());
+        grid.addColumn(createZonasRenderer()).setHeader("Descripción").setAutoWidth(true);
+        grid.addColumn(Zonas::getFrecuenciaVisita).setHeader("Frecuencia Visita").setAutoWidth(true);
+        dataView = grid.setItems(zonasService.zonasList());
         searchFilter(dataView);
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         // when a row is selected or deselected, populate form
         grid.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null) {
                 delete.setEnabled(true);
-                provincias.setValue(event.getValue().getProvincias());
                 UI.getCurrent().navigate(
-                        String.format(LOCALIDADES_EDIT_ROUTE_TEMPLATE,
-                                event.getValue().getIdLocalidad()));
+                        String.format(ZONAS_EDIT_ROUTE_TEMPLATE,
+                                event.getValue().getIdZona()));
             } else {
                 delete.setEnabled(false);
                 clearForm();
-                UI.getCurrent().navigate(LocalidadesView.class);
+                UI.getCurrent().navigate(ZonasView.class);
             }
         });
 
         // Configure Form
-        binder = new CollaborationBinder<>(Localidades.class, userInfo);
+        binder = new CollaborationBinder<>(Zonas.class, userInfo);
         // Bind fields. This is where you'd define e.g. validation rules
-        binder.forField(nombre).asRequired("Nombre es Requerido")
-                .bind("nombre");
-        binder.forField(codigoPostal).asRequired("Código Postal de Requerido")
-                .bind("codigoPostal");
-        binder.setSerializer(Departamentos.class,
-                departamentos -> String.valueOf(departamentos.getIdDepartamento()),
-                id -> localidadesService
-                        .findById(Integer.parseInt(id)));
-        // binder.bind(departamentos, "departamentos");
-
-        binder.setSerializer(Provincias.class,
-                provincias -> String.valueOf(provincias.getIdProvincia()),
-                idProvincia -> localidadesService
-                        .findProvinciaById(Integer.parseInt(idProvincia)));
-        // binder.bind(provincias, "provincias");
+        binder.forField(descripcion).asRequired("Descripción es Requerido")
+                .bind("descripcion");
+        binder.forField(areaGeografica).asRequired("Area Geográfica es Requerido")
+                .bind("areaGeografica");
+        binder.forField(frecuenciaVisita).asRequired("Frecuencia de Visita es Requerido")
+                .bind("frecuenciaVisita");
 
         binder.addStatusChangeListener(
                 event -> save.setEnabled(binder.isValid()));
@@ -151,37 +128,24 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
             clearForm();
             refreshGrid();
             delete.setEnabled(false);
-            searchLocalidad.clear();
-            searchDepartamento.clear();
-            // save.setEnabled(false);
-        });
-
-        provincias.addValueChangeListener(event -> {
-            Provincias selectedProvicias = event.getValue();
-            if (selectedProvicias != null) {
-                departamentos.setItems(localidadesService.findDptoByProvincias(selectedProvicias));
-            } else {
-                departamentos.clear();
-                departamentos.setItems();
-            }
         });
 
         save.addClickListener(e -> {
 
             try {
-                if (this.localidades == null) {
-                    this.localidades = new Localidades();
+                if (this.zonas == null) {
+                    this.zonas = new Zonas();
                 }
                 // if (this.departamentos.getProvincias() == null) {
                 // throw new Exception("Debe seleccionar una Provincia");
                 // }
-                binder.writeBean(this.localidades);
-                localidadesService.update(this.localidades);
+                binder.writeBean(this.zonas);
+                zonasService.update(this.zonas);
 
                 clearForm();
                 refreshGrid();
                 Notification.show("Datos Guardados");
-                UI.getCurrent().navigate(LocalidadesView.class);
+                UI.getCurrent().navigate(ZonasView.class);
             } catch (ObjectOptimisticLockingFailureException exception) {
                 Notification n = Notification.show(
                         "Error al Actualizar los datos. Alguien mas está actualizando los datos.");
@@ -195,13 +159,8 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
                     SQLException e1 = (SQLException) except.getCause().getCause();
                     if (e1.getMessage().contains("Ya existe la llave")) {
                         Notification n = Notification.show(
-                                "El Departamento " + this.localidades.getNombre()
-                                        + " ya existe");
-                        n.setPosition(Position.MIDDLE);
-                        n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                    if (e1.getMessage().contains("el valor nulo")) {
-                        Notification n = Notification.show("Debe seleccionar una Provincia");
+                                "La Zona " + this.zonas.getDescripcion()
+                                + " ya existe");
                         n.setPosition(Position.MIDDLE);
                         n.addThemeVariants(NotificationVariant.LUMO_ERROR);
                     }
@@ -212,15 +171,15 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
 
         delete.addClickListener(e -> {
             try {
-                if (this.localidades == null) {
-                    this.localidades = new Localidades();
+                if (this.zonas == null) {
+                    this.zonas = new Zonas();
                 }
-                binder.writeBean(this.localidades);
-                localidadesService.delete(this.localidades.getIdLocalidad());
+                binder.writeBean(this.zonas);
+                zonasService.delete(this.zonas.getIdZona());
                 clearForm();
                 refreshGrid();
                 Notification.show("Datos Eliminados").setPosition(Position.TOP_CENTER);
-                UI.getCurrent().navigate(LocalidadesView.class);
+                UI.getCurrent().navigate(ZonasView.class);
             } catch (ObjectOptimisticLockingFailureException exception) {
                 Notification n = Notification.show(
                         "Error al Eliminar los datos. Alguien mas está actualizando los datos.");
@@ -233,30 +192,28 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         });
     }
 
-    private void searchFilter(GridListDataView<Localidades> dataView2) {
+    private void searchFilter(GridListDataView<Zonas> dataView2) {
         dataView.addFilter(local -> {
-            String searchTerm = searchLocalidad.getValue().trim();
-            String searchTerm2 = searchDepartamento.getValue().trim();
+            String searchTerm = searchDescripcion.getValue().trim();
 
-            if (searchTerm.isEmpty() && searchTerm2.isEmpty())
+            if (searchTerm.isEmpty()) {
                 return true;
+            }
 
-            boolean matchesFullName = matchesTerm(local.getNombre(),
+            boolean matchesFullName = matchesTerm(local.getDescripcion(),
                     searchTerm);
-            boolean matchesDepartamentos = matchesTerm(local.getDepartamentos().getNombre(), searchTerm2);
 
-            return matchesFullName && matchesDepartamentos;
+            return matchesFullName;
         });
     }
 
-    private LitRenderer<Localidades> createLocalidadesRenderer() {
-        return LitRenderer.<Localidades>of(
+    private LitRenderer<Zonas> createZonasRenderer() {
+        return LitRenderer.<Zonas>of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "  <vaadin-avatar name=\"${item.fullName}\"></vaadin-avatar>"
-                        + "  <span> ${item.fullName} </span>"
-                        + "</vaadin-horizontal-layout>")
-
-                .withProperty("fullName", Localidades::getNombre);
+                + "  <vaadin-avatar name=\"${item.fullName}\"></vaadin-avatar>"
+                + "  <span> ${item.fullName} </span>"
+                + "</vaadin-horizontal-layout>")
+                .withProperty("fullName", Zonas::getDescripcion);
     }
 
     private boolean matchesTerm(String value, String searchTerm) {
@@ -266,40 +223,34 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        Optional<Integer> localidadesId = event.getRouteParameters().get(LOCALIDADES_ID)
+        Optional<Integer> zonasId = event.getRouteParameters().get(ZONAS_ID)
                 .map(Integer::parseInt);
-        if (localidadesId.isPresent()) {
-            Optional<Localidades> localidadesFromBackend = localidadesService
-                    .get(localidadesId.get());
-            if (localidadesFromBackend.isPresent()) {
-                populateForm(localidadesFromBackend.get());
+        if (zonasId.isPresent()) {
+            Optional<Zonas> zonasFromBackend = zonasService
+                    .get(zonasId.get());
+            if (zonasFromBackend.isPresent()) {
+                populateForm(zonasFromBackend.get());
             } else {
                 Notification.show(
-                        String.format("La Localidad solicitada no fué encontrado, ID = %d",
-                                localidadesId.get()),
+                        String.format("La Comisión solicitada no fué encontrado, ID = %d",
+                                zonasId.get()),
                         3000, Notification.Position.BOTTOM_START);
                 // when a row is selected but the data is no longer available,
                 // refresh grid
                 refreshGrid();
-                event.forwardTo(LocalidadesView.class);
+                event.forwardTo(ZonasView.class);
             }
         }
     }
 
     private void createHorizontalSearchLayout(HorizontalLayout searchHorizontalLayout) {
-        searchLocalidad = new TextField();
-        searchLocalidad.setPlaceholder("Buscar por Departamento");
-        searchLocalidad.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
-        searchLocalidad.setValueChangeMode(ValueChangeMode.EAGER);
-        searchLocalidad.addValueChangeListener(e -> dataView.refreshAll());
-        searchLocalidad.setWidth("500px");
-        searchDepartamento = new TextField();
-        searchDepartamento.setPlaceholder("Buscar por Provincia");
-        searchDepartamento.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
-        searchDepartamento.setValueChangeMode(ValueChangeMode.EAGER);
-        searchDepartamento.addValueChangeListener(e -> dataView.refreshAll());
-        searchDepartamento.setWidth("500px");
-        searchHorizontalLayout.add(searchLocalidad, searchDepartamento);
+        searchDescripcion = new TextField();
+        searchDescripcion.setPlaceholder("Buscar por Tipo de Comisión");
+        searchDescripcion.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
+        searchDescripcion.setValueChangeMode(ValueChangeMode.EAGER);
+        searchDescripcion.addValueChangeListener(e -> dataView.refreshAll());
+        searchDescripcion.setWidth("500px");
+        searchHorizontalLayout.add(searchDescripcion);
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
@@ -311,25 +262,16 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         editorDiv.setClassName("editor");
         editorLayoutDiv.add(editorDiv);
         FormLayout formLayout = new FormLayout();
-        nombre = new TextField("Nombre");
-        nombre.setMaxLength(50);
-        codigoPostal = new IntegerField("Código Postal");
-        departamentos = new ComboBox<Departamentos>("Departamento");
-        departamentos.setPlaceholder("Seleccione Departamento");
-        departamentosList = localidadesService.getAllDepartamentos();
-        departamentos.setItems(departamentosList);
-        departamentos.setItemLabelGenerator(Departamentos::getNombre);
-        departamentos.setRequired(true);
-        departamentos.setRequiredIndicatorVisible(true);
-        provincias = new ComboBox<Provincias>("Provincia");
-        provincias.setPlaceholder("Seleccione Provincia");
-        provinciaList = localidadesService.getAllProvincias();
-        provincias.setItems(provinciaList);
-        provincias.setItemLabelGenerator(Provincias::getProvincia);
-        provincias.setRequired(true);
-        provincias.setRequiredIndicatorVisible(true);
-
-        formLayout.add(nombre, codigoPostal, provincias, departamentos);
+        descripcion = new TextField("Descripción");
+        descripcion.setMaxLength(100);
+        areaGeografica = new TextArea("Area Geográfica");
+        frecuenciaVisita = new ComboBox<>("Frecuencia de Visita");
+        frecuenciaVisita.setPlaceholder("Seleccione Frecuencia de Visita");
+        frecuenciaVisita.setItems(VisitaEnum.values());
+        frecuenciaVisita.setItemLabelGenerator(VisitaEnum::getDisplayVisita);
+        frecuenciaVisita.setRequired(true);
+        frecuenciaVisita.setRequiredIndicatorVisible(true);
+        formLayout.add(descripcion, areaGeografica, frecuenciaVisita);
 
         editorDiv.add(formLayout);
         createButtonLayout(editorLayoutDiv);
@@ -358,7 +300,7 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
 
     private void refreshGrid() {
         grid.select(null);
-        dataView = grid.setItems(localidadesService.localList());
+        dataView = grid.setItems(zonasService.zonasList());
         searchFilter(dataView);
 
     }
@@ -367,16 +309,16 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         populateForm(null);
     }
 
-    private void populateForm(Localidades value) {
-        this.localidades = value;
+    private void populateForm(Zonas value) {
+        this.zonas = value;
         String topic = null;
-        if (this.localidades != null) {
-            topic = "localidades/" + this.localidades.getIdLocalidad();
+        if (this.zonas != null) {
+            topic = "zonas/" + this.zonas.getIdZona();
             avatarGroup.getStyle().set("visibility", "visible");
         } else {
             avatarGroup.getStyle().set("visibility", "hidden");
         }
-        binder.setTopic(topic, () -> this.localidades);
+        binder.setTopic(topic, () -> this.zonas);
         avatarGroup.setTopic(topic);
 
     }

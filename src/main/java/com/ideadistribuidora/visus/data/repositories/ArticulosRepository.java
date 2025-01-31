@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.ideadistribuidora.visus.data.Articulos;
 
@@ -40,7 +41,7 @@ public interface ArticulosRepository extends JpaRepository<Articulos, Integer>, 
             "(a.precio_costo * (a.margen_utilidad / 100)), " +
             "(a.precio_costo + (a.precio_costo * (a.margen_utilidad / 100))) " +
             ") FROM Articulos a " +
-            "WHERE a.idArticulo = id")
-    Optional<Articulos> finByIdWithGanancia(int id);
+            "WHERE a.idArticulo = :id")
+    Optional<Articulos> finByIdWithGanancia(@Param ("id")int id);
 
 }

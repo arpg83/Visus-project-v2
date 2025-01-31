@@ -1,10 +1,19 @@
 package com.ideadistribuidora.visus;
 
+import javax.sql.DataSource;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.sql.init.SqlDataSourceScriptDatabaseInitializer;
+import org.springframework.boot.autoconfigure.sql.init.SqlInitializationProperties;
+import org.springframework.context.annotation.Bean;
+
 import com.ideadistribuidora.visus.data.repositories.AlicuotasRepository;
 import com.ideadistribuidora.visus.data.repositories.ArticulosRepository;
 import com.ideadistribuidora.visus.data.repositories.BancosRepository;
 import com.ideadistribuidora.visus.data.repositories.ClientesBancosRepository;
 import com.ideadistribuidora.visus.data.repositories.ClientesRepository;
+import com.ideadistribuidora.visus.data.repositories.ComisionesRepository;
 import com.ideadistribuidora.visus.data.repositories.DepartamentosRepository;
 import com.ideadistribuidora.visus.data.repositories.DepositosRepository;
 import com.ideadistribuidora.visus.data.repositories.DocumentosRepository;
@@ -18,17 +27,12 @@ import com.ideadistribuidora.visus.data.repositories.ProveedoresRepository;
 import com.ideadistribuidora.visus.data.repositories.ProvinciasRepository;
 import com.ideadistribuidora.visus.data.repositories.RubrosRepository;
 import com.ideadistribuidora.visus.data.repositories.UbicacionesRepository;
+import com.ideadistribuidora.visus.data.repositories.VendedoresRepository;
+import com.ideadistribuidora.visus.data.repositories.ZonasRepository;
 import com.vaadin.collaborationengine.CollaborationEngineConfiguration;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.theme.Theme;
-
-import javax.sql.DataSource;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.sql.init.SqlDataSourceScriptDatabaseInitializer;
-import org.springframework.boot.autoconfigure.sql.init.SqlInitializationProperties;
-import org.springframework.context.annotation.Bean;
 
 /**
  * The entry point of the Spring Boot application.
@@ -57,7 +61,8 @@ public class Application implements AppShellConfigurator {
             DepositosRepository depositosRepository, LineasRepository lineasRepository,
             MedidasRepository medidasRepository, PresentacionesRepository presentacionesRepository,
             ProveedoresBancosRepository proveedoresBancosRepository, RubrosRepository rubrosRepository,
-            UbicacionesRepository ubicacionesRepository) {
+            UbicacionesRepository ubicacionesRepository, ComisionesRepository comisionesRepository,
+            VendedoresRepository vendedoresRepository, ZonasRepository zonasRepository) {
         // This bean ensures the database is only initialized when empty
         return new SqlDataSourceScriptDatabaseInitializer(dataSource, properties) {
             @Override
@@ -76,7 +81,10 @@ public class Application implements AppShellConfigurator {
                         || presentacionesRepository.count() == 0L
                         || proveedoresBancosRepository.count() == 0L
                         || rubrosRepository.count() == 0L
-                        || ubicacionesRepository.count() == 0L) {
+                        || ubicacionesRepository.count() == 0L
+                        || comisionesRepository.count() == 0L
+                        || vendedoresRepository.count() == 0L
+                        || zonasRepository.count() == 0L){
                     return super.initializeDatabase();
                 }
                 return false;
@@ -91,7 +99,7 @@ public class Application implements AppShellConfigurator {
                     // See <<ce.production.license-events>>
                 });
         String path = "C:\\vaadin\\licenses";
-        // String path = "/opt/licenses";
+        //String path = "/opt/licenses";
         configuration.setDataDir(path);
         return configuration;
     }

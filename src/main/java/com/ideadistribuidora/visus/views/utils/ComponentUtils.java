@@ -1,7 +1,6 @@
 package com.ideadistribuidora.visus.views.utils;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.List;
 
@@ -124,6 +123,16 @@ public class ComponentUtils {
             // Establecer el valor redondeado de vuelta en el BigDecimalField
             field.setValue(valorRedondeado);
         }
+    }
+
+    public static BigDecimal getRoundedValueBigdec(BigDecimal precioFinalConIva) {
+
+        // Redondear el valor al número de decimales especificado
+        if (precioFinalConIva != null) {
+            precioFinalConIva = precioFinalConIva.setScale(2, RoundingMode.HALF_UP);
+            // Establecer el valor redondeado de vuelta en el BigDecimalField
+        }
+        return precioFinalConIva;
     }
 
 }

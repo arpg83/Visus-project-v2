@@ -1,17 +1,15 @@
-package com.ideadistribuidora.visus.views.localidades;
+package com.ideadistribuidora.visus.views.comisiones;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
-import com.ideadistribuidora.visus.data.Departamentos;
-import com.ideadistribuidora.visus.data.Localidades;
-import com.ideadistribuidora.visus.data.Provincias;
-import com.ideadistribuidora.visus.services.LocalidadesService;
+import com.ideadistribuidora.visus.data.Comisiones;
+import com.ideadistribuidora.visus.data.enums.TipoComisionEnum;
+import com.ideadistribuidora.visus.services.ComisionesService;
+import com.ideadistribuidora.visus.views.utils.ComponentUtils;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.UserInfo;
@@ -19,6 +17,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -31,7 +30,7 @@ import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.renderer.LitRenderer;
@@ -42,42 +41,41 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-@PageTitle("Localidades")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 23)
-@Route(value = "24/:localidadesID?/:action?(edit)")
-public class LocalidadesView extends Div implements BeforeEnterObserver {
+@PageTitle("Comisiones")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 3)
+@Route(value = "4/:comisionesID?/:action?(edit)")
+public class ComisionesView extends Div implements BeforeEnterObserver {
 
-    private final String LOCALIDADES_ID = "localidadesID";
-    private final String LOCALIDADES_EDIT_ROUTE_TEMPLATE = "24/%s/edit";
+    private final String COMISIONES_ID = "comisionesID";
+    private final String COMISIONES_EDIT_ROUTE_TEMPLATE = "4/%s/edit";
 
-    private final Grid<Localidades> grid = new Grid<>(Localidades.class, false);
+    private final Grid<Comisiones> grid = new Grid<>(Comisiones.class, false);
 
     CollaborationAvatarGroup avatarGroup;
 
-    private TextField nombre;
-    private ComboBox<Departamentos> departamentos;
-    private IntegerField codigoPostal;
-    private TextField searchLocalidad;
-    private TextField searchDepartamento;
-    private ComboBox<Provincias> provincias;
+    private ComboBox<TipoComisionEnum> tipoComision;
+    private DateTimePicker fechaModificacion;
+    private DateTimePicker vigenciaDesde;
+    private DateTimePicker vigenciaHasta;
+    private BigDecimalField porcentajeSobreImporte;
+    private BigDecimalField porcentajeImporteFijo;
+    private BigDecimalField porcentajeSobreMargen;
+    private TextField searchTipoComision;
 
     private final Button cancel = new Button("Cancelar");
     private final Button save = new Button("Grabar");
     private final Button delete = new Button("ELiminar");
 
-    private CollaborationBinder<Localidades> binder;
+    private CollaborationBinder<Comisiones> binder;
 
-    private Localidades localidades;
+    private Comisiones comisiones;
 
-    private final LocalidadesService localidadesService;
-    private List<Departamentos> departamentosList = new ArrayList<>();
-    private GridListDataView<Localidades> dataView;
-    private List<Provincias> provinciaList = new ArrayList<>();
-    private Provincias provinciaValue = null;
+    private final ComisionesService comisionesService;
+    GridListDataView<Comisiones> dataView;
 
-    public LocalidadesView(LocalidadesService localidadesService) {
-        this.localidadesService = localidadesService;
-        addClassNames("localidades-view");
+    public ComisionesView(ComisionesService comisionesService) {
+        this.comisionesService = comisionesService;
+        addClassNames("comisiones-view");
 
         // UserInfo is used by Collaboration Engine and is used to share details
         // of users to each other to able collaboration. Replace this with
@@ -99,48 +97,41 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         add(splitLayout);
 
         // Configure Grid
-        grid.addColumn(createLocalidadesRenderer()).setHeader("Nombre").setAutoWidth(true);
-        grid.addColumn(Localidades::getCodigoPostal).setHeader("Código Postal").setAutoWidth(true);
-        grid.addColumn(localidades -> localidades.getDepartamentos().getNombre()).setHeader("Departamento")
-                .setAutoWidth(true);
-        grid.addColumn(localidades -> localidades.getProvincias().getProvincia())
-                .setHeader("Provincia").setAutoWidth(true);
-        dataView = grid.setItems(localidadesService.localList());
+        grid.addColumn(createComisionesRenderer()).setHeader("Tipo de Comision").setAutoWidth(true);
+        grid.addColumn(Comisiones::getPorcentajeSobreImporte).setHeader("% Sobre Importe").setAutoWidth(true);
+        grid.addColumn(Comisiones::getPorcentajeImporteFijo).setHeader("% Sobre Importe Fijo").setAutoWidth(true);
+        grid.addColumn(Comisiones::getPorcentajeSobreMargen).setHeader("% Sobre Margen").setAutoWidth(true);
+        dataView = grid.setItems(comisionesService.comisionesList());
         searchFilter(dataView);
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         // when a row is selected or deselected, populate form
         grid.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null) {
                 delete.setEnabled(true);
-                provincias.setValue(event.getValue().getProvincias());
                 UI.getCurrent().navigate(
-                        String.format(LOCALIDADES_EDIT_ROUTE_TEMPLATE,
-                                event.getValue().getIdLocalidad()));
+                        String.format(COMISIONES_EDIT_ROUTE_TEMPLATE,
+                                event.getValue().getIdComision()));
             } else {
                 delete.setEnabled(false);
                 clearForm();
-                UI.getCurrent().navigate(LocalidadesView.class);
+                UI.getCurrent().navigate(ComisionesView.class);
             }
         });
 
         // Configure Form
-        binder = new CollaborationBinder<>(Localidades.class, userInfo);
+        binder = new CollaborationBinder<>(Comisiones.class, userInfo);
         // Bind fields. This is where you'd define e.g. validation rules
-        binder.forField(nombre).asRequired("Nombre es Requerido")
-                .bind("nombre");
-        binder.forField(codigoPostal).asRequired("Código Postal de Requerido")
-                .bind("codigoPostal");
-        binder.setSerializer(Departamentos.class,
-                departamentos -> String.valueOf(departamentos.getIdDepartamento()),
-                id -> localidadesService
-                        .findById(Integer.parseInt(id)));
-        // binder.bind(departamentos, "departamentos");
-
-        binder.setSerializer(Provincias.class,
-                provincias -> String.valueOf(provincias.getIdProvincia()),
-                idProvincia -> localidadesService
-                        .findProvinciaById(Integer.parseInt(idProvincia)));
-        // binder.bind(provincias, "provincias");
+        binder.forField(tipoComision).asRequired("Tipo de Comisión es Requerido")
+                .bind("tipoComision");
+        binder.forField(fechaModificacion).asRequired("Fecha de Modificación es Requerido")
+                .bind("fechaModificacion");
+        binder.forField(vigenciaDesde).asRequired("Vigencia Desde es Requerido")
+                .bind("vigenciaDesde");
+        binder.forField(vigenciaHasta).bind("vigenciaHasta");
+        binder.forField(porcentajeSobreImporte).asRequired("Porcentual sobre Importe es Requerido")
+                .bind("porcentajeSobreImporte");
+        binder.forField(porcentajeImporteFijo).bind("porcentajeImporteFijo");
+        binder.forField(porcentajeSobreMargen).bind("porcentajeSobreMargen");
 
         binder.addStatusChangeListener(
                 event -> save.setEnabled(binder.isValid()));
@@ -151,37 +142,24 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
             clearForm();
             refreshGrid();
             delete.setEnabled(false);
-            searchLocalidad.clear();
-            searchDepartamento.clear();
-            // save.setEnabled(false);
-        });
-
-        provincias.addValueChangeListener(event -> {
-            Provincias selectedProvicias = event.getValue();
-            if (selectedProvicias != null) {
-                departamentos.setItems(localidadesService.findDptoByProvincias(selectedProvicias));
-            } else {
-                departamentos.clear();
-                departamentos.setItems();
-            }
         });
 
         save.addClickListener(e -> {
 
             try {
-                if (this.localidades == null) {
-                    this.localidades = new Localidades();
+                if (this.comisiones == null) {
+                    this.comisiones = new Comisiones();
                 }
                 // if (this.departamentos.getProvincias() == null) {
                 // throw new Exception("Debe seleccionar una Provincia");
                 // }
-                binder.writeBean(this.localidades);
-                localidadesService.update(this.localidades);
+                binder.writeBean(this.comisiones);
+                comisionesService.update(this.comisiones);
 
                 clearForm();
                 refreshGrid();
                 Notification.show("Datos Guardados");
-                UI.getCurrent().navigate(LocalidadesView.class);
+                UI.getCurrent().navigate(ComisionesView.class);
             } catch (ObjectOptimisticLockingFailureException exception) {
                 Notification n = Notification.show(
                         "Error al Actualizar los datos. Alguien mas está actualizando los datos.");
@@ -195,13 +173,8 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
                     SQLException e1 = (SQLException) except.getCause().getCause();
                     if (e1.getMessage().contains("Ya existe la llave")) {
                         Notification n = Notification.show(
-                                "El Departamento " + this.localidades.getNombre()
-                                        + " ya existe");
-                        n.setPosition(Position.MIDDLE);
-                        n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                    if (e1.getMessage().contains("el valor nulo")) {
-                        Notification n = Notification.show("Debe seleccionar una Provincia");
+                                "La Comision " + this.comisiones.getTipoComision()
+                                + " ya existe");
                         n.setPosition(Position.MIDDLE);
                         n.addThemeVariants(NotificationVariant.LUMO_ERROR);
                     }
@@ -212,15 +185,15 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
 
         delete.addClickListener(e -> {
             try {
-                if (this.localidades == null) {
-                    this.localidades = new Localidades();
+                if (this.comisiones == null) {
+                    this.comisiones = new Comisiones();
                 }
-                binder.writeBean(this.localidades);
-                localidadesService.delete(this.localidades.getIdLocalidad());
+                binder.writeBean(this.comisiones);
+                comisionesService.delete(this.comisiones.getIdComision());
                 clearForm();
                 refreshGrid();
                 Notification.show("Datos Eliminados").setPosition(Position.TOP_CENTER);
-                UI.getCurrent().navigate(LocalidadesView.class);
+                UI.getCurrent().navigate(ComisionesView.class);
             } catch (ObjectOptimisticLockingFailureException exception) {
                 Notification n = Notification.show(
                         "Error al Eliminar los datos. Alguien mas está actualizando los datos.");
@@ -233,30 +206,28 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         });
     }
 
-    private void searchFilter(GridListDataView<Localidades> dataView2) {
+    private void searchFilter(GridListDataView<Comisiones> dataView2) {
         dataView.addFilter(local -> {
-            String searchTerm = searchLocalidad.getValue().trim();
-            String searchTerm2 = searchDepartamento.getValue().trim();
+            String searchTerm = searchTipoComision.getValue().trim();
 
-            if (searchTerm.isEmpty() && searchTerm2.isEmpty())
+            if (searchTerm.isEmpty()) {
                 return true;
+            }
 
-            boolean matchesFullName = matchesTerm(local.getNombre(),
+            boolean matchesFullName = matchesTerm(local.getTipoComision().getDisplayTipoComision(),
                     searchTerm);
-            boolean matchesDepartamentos = matchesTerm(local.getDepartamentos().getNombre(), searchTerm2);
 
-            return matchesFullName && matchesDepartamentos;
+            return matchesFullName;
         });
     }
 
-    private LitRenderer<Localidades> createLocalidadesRenderer() {
-        return LitRenderer.<Localidades>of(
+    private LitRenderer<Comisiones> createComisionesRenderer() {
+        return LitRenderer.<Comisiones>of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "  <vaadin-avatar name=\"${item.fullName}\"></vaadin-avatar>"
-                        + "  <span> ${item.fullName} </span>"
-                        + "</vaadin-horizontal-layout>")
-
-                .withProperty("fullName", Localidades::getNombre);
+                + "  <vaadin-avatar name=\"${item.fullName}\"></vaadin-avatar>"
+                + "  <span> ${item.fullName} </span>"
+                + "</vaadin-horizontal-layout>")
+                .withProperty("fullName", Comisiones::getTipoComision);
     }
 
     private boolean matchesTerm(String value, String searchTerm) {
@@ -266,40 +237,34 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        Optional<Integer> localidadesId = event.getRouteParameters().get(LOCALIDADES_ID)
+        Optional<Integer> comisionesId = event.getRouteParameters().get(COMISIONES_ID)
                 .map(Integer::parseInt);
-        if (localidadesId.isPresent()) {
-            Optional<Localidades> localidadesFromBackend = localidadesService
-                    .get(localidadesId.get());
-            if (localidadesFromBackend.isPresent()) {
-                populateForm(localidadesFromBackend.get());
+        if (comisionesId.isPresent()) {
+            Optional<Comisiones> comisionesFromBackend = comisionesService
+                    .get(comisionesId.get());
+            if (comisionesFromBackend.isPresent()) {
+                populateForm(comisionesFromBackend.get());
             } else {
                 Notification.show(
-                        String.format("La Localidad solicitada no fué encontrado, ID = %d",
-                                localidadesId.get()),
+                        String.format("La Comisión solicitada no fué encontrado, ID = %d",
+                                comisionesId.get()),
                         3000, Notification.Position.BOTTOM_START);
                 // when a row is selected but the data is no longer available,
                 // refresh grid
                 refreshGrid();
-                event.forwardTo(LocalidadesView.class);
+                event.forwardTo(ComisionesView.class);
             }
         }
     }
 
     private void createHorizontalSearchLayout(HorizontalLayout searchHorizontalLayout) {
-        searchLocalidad = new TextField();
-        searchLocalidad.setPlaceholder("Buscar por Departamento");
-        searchLocalidad.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
-        searchLocalidad.setValueChangeMode(ValueChangeMode.EAGER);
-        searchLocalidad.addValueChangeListener(e -> dataView.refreshAll());
-        searchLocalidad.setWidth("500px");
-        searchDepartamento = new TextField();
-        searchDepartamento.setPlaceholder("Buscar por Provincia");
-        searchDepartamento.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
-        searchDepartamento.setValueChangeMode(ValueChangeMode.EAGER);
-        searchDepartamento.addValueChangeListener(e -> dataView.refreshAll());
-        searchDepartamento.setWidth("500px");
-        searchHorizontalLayout.add(searchLocalidad, searchDepartamento);
+        searchTipoComision = new TextField();
+        searchTipoComision.setPlaceholder("Buscar por Tipo de Comisión");
+        searchTipoComision.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
+        searchTipoComision.setValueChangeMode(ValueChangeMode.EAGER);
+        searchTipoComision.addValueChangeListener(e -> dataView.refreshAll());
+        searchTipoComision.setWidth("500px");
+        searchHorizontalLayout.add(searchTipoComision);
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
@@ -311,25 +276,23 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         editorDiv.setClassName("editor");
         editorLayoutDiv.add(editorDiv);
         FormLayout formLayout = new FormLayout();
-        nombre = new TextField("Nombre");
-        nombre.setMaxLength(50);
-        codigoPostal = new IntegerField("Código Postal");
-        departamentos = new ComboBox<Departamentos>("Departamento");
-        departamentos.setPlaceholder("Seleccione Departamento");
-        departamentosList = localidadesService.getAllDepartamentos();
-        departamentos.setItems(departamentosList);
-        departamentos.setItemLabelGenerator(Departamentos::getNombre);
-        departamentos.setRequired(true);
-        departamentos.setRequiredIndicatorVisible(true);
-        provincias = new ComboBox<Provincias>("Provincia");
-        provincias.setPlaceholder("Seleccione Provincia");
-        provinciaList = localidadesService.getAllProvincias();
-        provincias.setItems(provinciaList);
-        provincias.setItemLabelGenerator(Provincias::getProvincia);
-        provincias.setRequired(true);
-        provincias.setRequiredIndicatorVisible(true);
+        tipoComision = new ComboBox<>("Tipo de Comisión");
+        tipoComision.setPlaceholder("Seleccione Tipo de Comisión");
+        tipoComision.setItems(TipoComisionEnum.values());
+        tipoComision.setItemLabelGenerator(TipoComisionEnum::getDisplayTipoComision);
+        tipoComision.setRequired(true);
+        tipoComision.setRequiredIndicatorVisible(true);
+        fechaModificacion = new DateTimePicker("Fecha de Modificación");
+        fechaModificacion.setDatePickerI18n(ComponentUtils.getI18n());
+        vigenciaDesde = new DateTimePicker("Vigencia Desde");
+        vigenciaDesde.setDatePickerI18n(ComponentUtils.getI18n());
+        vigenciaHasta = new DateTimePicker("Vigencia Hasta");
+        vigenciaHasta.setDatePickerI18n(ComponentUtils.getI18n());
+        porcentajeSobreImporte = new BigDecimalField("Porcentual Sobre Importe");
+        porcentajeImporteFijo = new BigDecimalField("Porcentual Sobre Importe Fijo");
+        porcentajeSobreMargen = new BigDecimalField("Porcentual Sobre Margen");
 
-        formLayout.add(nombre, codigoPostal, provincias, departamentos);
+        formLayout.add(tipoComision, fechaModificacion, vigenciaDesde, vigenciaHasta, porcentajeSobreImporte, porcentajeImporteFijo, porcentajeSobreMargen);
 
         editorDiv.add(formLayout);
         createButtonLayout(editorLayoutDiv);
@@ -358,7 +321,7 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
 
     private void refreshGrid() {
         grid.select(null);
-        dataView = grid.setItems(localidadesService.localList());
+        dataView = grid.setItems(comisionesService.comisionesList());
         searchFilter(dataView);
 
     }
@@ -367,16 +330,16 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         populateForm(null);
     }
 
-    private void populateForm(Localidades value) {
-        this.localidades = value;
+    private void populateForm(Comisiones value) {
+        this.comisiones = value;
         String topic = null;
-        if (this.localidades != null) {
-            topic = "localidades/" + this.localidades.getIdLocalidad();
+        if (this.comisiones != null) {
+            topic = "comisiones/" + this.comisiones.getIdComision();
             avatarGroup.getStyle().set("visibility", "visible");
         } else {
             avatarGroup.getStyle().set("visibility", "hidden");
         }
-        binder.setTopic(topic, () -> this.localidades);
+        binder.setTopic(topic, () -> this.comisiones);
         avatarGroup.setTopic(topic);
 
     }

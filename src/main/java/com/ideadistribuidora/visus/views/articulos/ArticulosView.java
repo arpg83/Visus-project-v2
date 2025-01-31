@@ -3,7 +3,6 @@ package com.ideadistribuidora.visus.views.articulos;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.orm.jpa.JpaSystemException;
@@ -12,31 +11,26 @@ import com.ideadistribuidora.visus.data.Alicuotas;
 import com.ideadistribuidora.visus.data.Articulos;
 import com.ideadistribuidora.visus.data.Depositos;
 import com.ideadistribuidora.visus.data.Lineas;
-import com.ideadistribuidora.visus.data.Localidades;
 import com.ideadistribuidora.visus.data.Medidas;
 import com.ideadistribuidora.visus.data.Presentaciones;
 import com.ideadistribuidora.visus.data.Proveedores;
 import com.ideadistribuidora.visus.data.Rubros;
 import com.ideadistribuidora.visus.data.Ubicaciones;
 import com.ideadistribuidora.visus.data.enums.EstadoArticuloEnum;
-import com.ideadistribuidora.visus.data.enums.NivelFidelizacionEnum;
 import com.ideadistribuidora.visus.data.enums.TipoArticuloEnum;
 import com.ideadistribuidora.visus.services.ArticulosService;
 import com.ideadistribuidora.visus.views.utils.ComponentUtils;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.UserInfo;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H4;
@@ -57,7 +51,6 @@ import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Menu;
@@ -118,7 +111,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
 
         private CollaborationBinder<Articulos> binder;
 
-        private Articulos articulos;
+        private Articulos artic;
 
         private GridListDataView<Articulos> dataView;
 
@@ -291,12 +284,12 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
 
                 save.addClickListener(e -> {
                         try {
-                                if (this.articulos == null) {
-                                        this.articulos = new Articulos();
+                                if (this.artic == null) {
+                                        this.artic = new Articulos();
                                 }
 
-                                binder.writeBean(this.articulos);
-                                articulosService.update(this.articulos);
+                                binder.writeBean(this.artic);
+                                articulosService.update(this.artic);
                                 clearForm();
                                 refreshGrid();
                                 Notification.show("Datos Guardados");
@@ -324,11 +317,11 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
 
                 delete.addClickListener(e -> {
                         try {
-                                if (this.articulos == null) {
-                                        this.articulos = new Articulos();
+                                if (this.artic == null) {
+                                        this.artic = new Articulos();
                                 }
-                                binder.writeBean(this.articulos);
-                                articulosService.delete(this.articulos.getIdArticulo());
+                                binder.writeBean(this.artic);
+                                articulosService.delete(this.artic.getIdArticulo());
                                 clearForm();
                                 refreshGrid();
                                 Notification.show("Datos Eliminados").setPosition(Position.TOP_CENTER);
@@ -347,7 +340,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
         }
 
         private void searchFilter(GridListDataView<Articulos> dataView2) {
-                dataView.addFilter(artic -> {
+                dataView2.addFilter(articSearh -> {
                         String searchTerm = searchCodigo.getValue().trim();
                         String searchTerm2 = searchDescrpcion.getValue().trim();
                         String searchTerm3 = searchRubro.getValue().trim();
@@ -358,13 +351,13 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                         && searchTerm4.isEmpty() && searchTerm5.isEmpty())
                                 return true;
 
-                        boolean matchesFullName = matchesTerm(artic.getCodigo_interno(),
+                        boolean matchesFullName = matchesTerm(articSearh.getCodigo_interno(),
                                         searchTerm);
-                        boolean matchesDescripcion = matchesTerm(artic.getDescripcion(), searchTerm2);
-                        boolean matchesRubros = matchesTerm(artic.getIdLinea().getRubros().getDescripcion(),
+                        boolean matchesDescripcion = matchesTerm(articSearh.getDescripcion(), searchTerm2);
+                        boolean matchesRubros = matchesTerm(articSearh.getIdLinea().getRubros().getDescripcion(),
                                         searchTerm3);
-                        boolean matchesLinea = matchesTerm(artic.getIdLinea().getDescripcion(), searchTerm4);
-                        boolean matchesEstado = matchesTerm(artic.getEstado().getDisplayEstadoArticulo(), searchTerm5);
+                        boolean matchesLinea = matchesTerm(articSearh.getIdLinea().getDescripcion(), searchTerm4);
+                        boolean matchesEstado = matchesTerm(articSearh.getEstado().getDisplayEstadoArticulo(), searchTerm5);
 
                         return matchesFullName && matchesDescripcion && matchesRubros && matchesLinea && matchesEstado;
                 });
@@ -500,8 +493,8 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 precioCosto = new BigDecimalField("Precio Costo");
                 precioCosto.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
                 precioCosto.setValue(BigDecimal.ZERO);
-                precioCosto.addValueChangeListener(e -> {
-                        ComponentUtils.getRoundedValue(margenUtilidad);
+                precioCosto.addBlurListener(e -> {
+                        ComponentUtils.getRoundedValue(precioCosto);
                         BigDecimal precCost = precioCosto.getValue();
                         BigDecimal mUtilidad = margenUtilidad.getValue();
                         if (precCost != null && mUtilidad != null) {
@@ -511,8 +504,6 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                         ganancia.setValue(res);
                                         precioFinalSinIva.setValue(precCost.add(res));
                                 }
-                        } else {
-                                return;
                         }
 
                 });
@@ -520,7 +511,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 margenUtilidad.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
                 margenUtilidad.setSuffixComponent(new Span("%"));
                 margenUtilidad.setValue(BigDecimal.ZERO);
-                margenUtilidad.addValueChangeListener(e -> {
+                margenUtilidad.addBlurListener(e -> {
                         ComponentUtils.getRoundedValue(margenUtilidad);
                         BigDecimal precCost = precioCosto.getValue();
                         BigDecimal mUtilidad = margenUtilidad.getValue();
@@ -531,8 +522,6 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                         ganancia.setValue(res);
                                         precioFinalSinIva.setValue(precCost.add(res));
                                 }
-                        } else {
-                                return;
                         }
 
                 });
@@ -545,46 +534,22 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 precioFinalSinIva.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
                 precioFinalSinIva.setReadOnly(true);
                 ComponentUtils.getRoundedValue(precioFinalSinIva);
-                // precioFinalSinIva.addValueChangeListener(e -> {
-
-                // BigDecimal alic = BigDecimal.ZERO;
-                // BigDecimal preFinSinIv = e.getValue();
-                // if (alicuota.getValue() == null || preFinSinIv == null) {
-                // return;
-                // } else {
-                // Alicuotas alicuotas = alicuota.getValue();
-                // alic = alicuotas.getDescripcion().contains("%")
-                // ? BigDecimal.valueOf(Double
-                // .valueOf(alicuotas.getDescripcion().replace("%", "")))
-                // : BigDecimal.ZERO;
-                // if (alic.compareTo(BigDecimal.ZERO) > 0 &&
-                // preFinSinIv.compareTo(BigDecimal.ZERO) > 0) {
-                // BigDecimal resConIva = precioFinalSinIva.getValue().multiply(alic)
-                // .divide(BigDecimal.valueOf(100));
-                // precioFinalConIva.setValue(preFinSinIv.add(resConIva));
-                // } else {
-                // precioFinalConIva.setValue(BigDecimal.ZERO);
-                // }
-                // }
-
-                // });
                 alicuota = new ComboBox<>("Alicuota");
                 alicuota.setPlaceholder("Seleccione Alicuota");
                 alicuota.setItems(articulosService.getAllAlicuotas());
                 alicuota.setItemLabelGenerator(Alicuotas::getDescripcion);
                 alicuota.setRequired(true);
                 alicuota.setRequiredIndicatorVisible(true);
-                alicuota.addValueChangeListener(e -> {
+                alicuota.addBlurListener(e -> {
 
                         BigDecimal alic = BigDecimal.ZERO;
                         BigDecimal preFinSinIv = precioFinalSinIva.getValue();
-                        if (alicuota.getValue() == null || preFinSinIv == null) {
-                                return;
-                        } else {
+                        if (alicuota.getValue() != null && preFinSinIv != null) {
                                 Alicuotas alicuotas = alicuota.getValue();
                                 alic = alicuotas.getDescripcion().contains("%")
                                                 ? BigDecimal.valueOf(Double
-                                                                .valueOf(alicuotas.getDescripcion().replace("%", "")))
+                                                                .parseDouble(alicuotas.getDescripcion().replace("%",
+                                                                                "")))
                                                 : BigDecimal.ZERO;
                                 if (alic.compareTo(BigDecimal.ZERO) > 0 && preFinSinIv.compareTo(BigDecimal.ZERO) > 0) {
                                         BigDecimal resConIva = precioFinalSinIva.getValue().multiply(alic)
@@ -613,14 +578,6 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 esBonificado.addValueChangeListener(e -> {
                         if (e.getValue()) {
                                 bonificacion.setEnabled(true);
-                                BigDecimal precFinSinIva = precioFinalSinIva.getValue();
-                                if (bonificacion.getValue() != null
-                                                && bonificacion.getValue().compareTo(BigDecimal.ZERO) > 0 &&
-                                                precioFinalSinIva != null) {
-                                        precioFinalSinIva.setValue(precFinSinIva.subtract(
-                                                        precFinSinIva.multiply(bonificacion.getValue())
-                                                                        .divide(BigDecimal.valueOf(100))));
-                                }
                         } else {
                                 bonificacion.setEnabled(false);
                         }
@@ -781,15 +738,15 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
         }
 
         private void populateForm(Articulos value) {
-                this.articulos = value;
+                this.artic = value;
                 String topic = null;
-                if (this.articulos != null) {
-                        topic = "articulos/" + this.articulos.getIdArticulo();
+                if (this.artic != null) {
+                        topic = "articulos/" + this.artic.getIdArticulo();
                         avatarGroup.getStyle().set("visibility", "visible");
                 } else {
                         avatarGroup.getStyle().set("visibility", "hidden");
                 }
-                binder.setTopic(topic, () -> this.articulos);
+                binder.setTopic(topic, () -> this.artic);
                 avatarGroup.setTopic(topic);
 
         }

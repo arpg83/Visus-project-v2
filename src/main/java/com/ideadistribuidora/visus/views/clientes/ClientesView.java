@@ -491,11 +491,11 @@ public class ClientesView extends Div implements BeforeEnterObserver {
                 }).debounce(300);
                 periodoCarencia = new IntegerField("Período Carencia");
                 periodoCarencia.setValue(0);
-                nivelFidelizacion = new ComboBox<NivelFidelizacionEnum>("Nivel Fidelización");
+                nivelFidelizacion = new ComboBox<>("Nivel Fidelización");
                 nivelFidelizacion.setPlaceholder("Seleccione Nivel Fidelización");
                 nivelFidelizacion.setItems(NivelFidelizacionEnum.values());
                 nivelFidelizacion.setItemLabelGenerator(NivelFidelizacionEnum::getDisplayNivelFidelizacion);
-                situacionFiscal = new ComboBox<SituacionFiscalEnum>("Situación Fiscal");
+                situacionFiscal = new ComboBox<>("Situación Fiscal");
                 situacionFiscal.setPlaceholder("Seleccione Situación Fiscal");
                 situacionFiscal.setItems(SituacionFiscalEnum.values());
                 situacionFiscal.setItemLabelGenerator(SituacionFiscalEnum::getDisplaySituacionFiscal);
