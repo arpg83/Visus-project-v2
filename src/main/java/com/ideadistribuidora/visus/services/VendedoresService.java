@@ -13,15 +13,16 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.ideadistribuidora.visus.data.Comisiones;
+import com.ideadistribuidora.visus.data.ComisionesTramos;
 import com.ideadistribuidora.visus.data.Documento;
 import com.ideadistribuidora.visus.data.Domicilios;
 import com.ideadistribuidora.visus.data.Localidades;
-import com.ideadistribuidora.visus.data.Provincias;
 import com.ideadistribuidora.visus.data.Vendedores;
 import com.ideadistribuidora.visus.data.Zonas;
 import com.ideadistribuidora.visus.data.enums.TipoCuentaEnum;
 import com.ideadistribuidora.visus.data.enums.TipoDomicilioEnum;
 import com.ideadistribuidora.visus.data.repositories.ComisionesRepository;
+import com.ideadistribuidora.visus.data.repositories.ComisionesTramosRepository;
 import com.ideadistribuidora.visus.data.repositories.DocumentosRepository;
 import com.ideadistribuidora.visus.data.repositories.DomiciliosRepository;
 import com.ideadistribuidora.visus.data.repositories.LocalidadesRepository;
@@ -36,18 +37,21 @@ public class VendedoresService {
     private final ZonasRepository zonasRepository;
     private final ComisionesRepository comisionesRepository;
     private final DomiciliosRepository domiciliosRepository;
+    private final ComisionesTramosRepository comisionesTramosRepository;
     
 
     public VendedoresService(VendedoresRepository repository, DocumentosRepository docRepository
             , LocalidadesRepository localidadesRepository, ZonasRepository zonasRepository
             , ComisionesRepository comisionesRepository
-            , DomiciliosRepository domiciliosRepository) {    
+            , DomiciliosRepository domiciliosRepository
+            , ComisionesTramosRepository comisionesTramosRepository) {    
         this.repository = repository;
         this.docRepository = docRepository;
         this.localidadesRepository = localidadesRepository;
         this.zonasRepository = zonasRepository;
         this.comisionesRepository = comisionesRepository;
         this.domiciliosRepository = domiciliosRepository;
+        this.comisionesTramosRepository = comisionesTramosRepository;
         
     }
 
@@ -150,6 +154,23 @@ public class VendedoresService {
 
     public Set<Comisiones> getComisionesByIdVendedores(int idVendedor) {
         return repository.findComisionesByIdVendedor(idVendedor);
+    }
+
+    public Set<ComisionesTramos> getComisionesTramosByIdVendedor(int idVendedor) {
+        return comisionesTramosRepository.findComisionesTramosByIdVendedor(idVendedor);
+    }
+
+    public void saveComisionesTramos(ComisionesTramos comisionesTramos) {
+        comisionesTramosRepository.save(comisionesTramos);
+    }
+
+    public void deleteComisionesTramos(ComisionesTramos comisionesTramos) {
+        comisionesTramosRepository.delete(comisionesTramos);
+    }
+
+    public void deleteComisionesTramosByIdVendedor(int idVendedor) {
+        Set<ComisionesTramos> comisionesTramos = comisionesTramosRepository.findComisionesTramosByIdVendedor(idVendedor);
+        comisionesTramosRepository.deleteAll(comisionesTramos);
     }
 
     

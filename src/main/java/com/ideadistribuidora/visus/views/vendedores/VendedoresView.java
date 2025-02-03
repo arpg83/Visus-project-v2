@@ -16,9 +16,11 @@ import com.ideadistribuidora.visus.data.Provincias;
 import com.ideadistribuidora.visus.data.Vendedores;
 import com.ideadistribuidora.visus.data.Zonas;
 import com.ideadistribuidora.visus.data.enums.SituacionFiscalEnum;
+import com.ideadistribuidora.visus.data.enums.TipoComisionEnum;
 import com.ideadistribuidora.visus.data.enums.TipoDomicilioEnum;
 import com.ideadistribuidora.visus.services.VendedoresService;
 import com.ideadistribuidora.visus.views.clientes.ClientesView;
+import com.ideadistribuidora.visus.views.dialogs.DialogComisionesTramos;
 import com.ideadistribuidora.visus.views.dialogs.DialogConfirmacion;
 import com.ideadistribuidora.visus.views.dialogs.DialogSaveEditComisiones;
 import com.ideadistribuidora.visus.views.dialogs.DialogSaveEditZonas;
@@ -126,6 +128,7 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
         private Comisiones comisionesMod;
         private DialogSaveEditZonas dialogSaveEditZonas;
         private DialogSaveEditComisiones dialogSaveEditComisiones;
+        private DialogComisionesTramos dialogComisionesTramos;
         private boolean zonaChanges = false;
         private boolean comisionesChanges = false;
         private final String EFFECT_CHANGES = "Para que los cambios surtan efecto debe hacer click en el boton Grabar";
@@ -238,7 +241,9 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                         if("Escalonada".equals(comisiones.getTipoComision().getDisplayTipoComision())){
                                 tramosButton = new Button("Ver Tramos");
                                 tramosButton.addClickListener(e -> {
-                                        Notification.show("Ver Tramos");
+                                        dialogComisionesTramos = new DialogComisionesTramos(vendedores.getIdVendedor(), vendedoresService);
+                                        dialogComisionesTramos.open();
+                                       
                                 });
                         }else{
                                 tramosButton = new Button("No Posee");
@@ -737,6 +742,8 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                 this.vendedores.setComisiones(comisionesList);
                 vendedoresService.update(this.vendedores);
                 vendedoresService.deleteComisionesById(comisionesSelected.getIdComision());
+                if("Escalonada".equals(comisionesSelected.getTipoComision().getDisplayTipoComision()))
+                        vendedoresService.deleteComisionesTramosByIdVendedor(vendedores.getIdVendedor());
                 gridComisiones.getDataProvider().refreshAll();
                 addComisionesButton.setEnabled(true);
                 editComisionesButton.setEnabled(false);
@@ -761,6 +768,9 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
 
         private void confirmSaveEditComisionesFunction(Comisiones comisiones) {
                 if (comisionesSelected != null) {
+                        if("Escalonada".equals(comisionesSelected.getTipoComision().getDisplayTipoComision()) && !"Escalonada".equals(comisiones.getTipoComision().getDisplayTipoComision())){
+                                vendedoresService.deleteComisionesTramosByIdVendedor(vendedores.getIdVendedor());
+                        }
                         comisionesMod = comisiones;
                         new DialogConfirmacion("¿Está seguro que desea Modificar esta Comisión?",
                                         this::saveEditComisionesFunction);
