@@ -14,6 +14,7 @@
 @import url('./views/comisiones-view.css');
 @import url('./views/zonas-view.css');
 @import url('./views/vendedores-view.css');
+@import url('./views/porcentuales-view.css');
     [theme~="dark"] {
       --lumo-shade-5pct: rgba(33, 33, 33, 0.05);
       --lumo-shade-10pct: rgba(33, 33, 33, 0.1);

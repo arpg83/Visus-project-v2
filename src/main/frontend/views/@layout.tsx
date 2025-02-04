@@ -32,7 +32,7 @@ const groupMenuItems = (menuItems: readonly Readonly<{ to: string; icon?: string
         displayTitle = 'Ventas';
       } else if (['Articulos', 'Medidas', 'Presentaciones', 'Depositos', 'Rubros', 'Ubicaciones', 'Lineas'].includes(title)) {
         displayTitle = 'Artículos';
-      } else if (['Alicuotas', 'Bancos'].includes(title)) {
+      } else if (['Alicuotas', 'Bancos', 'Porcentuales'].includes(title)) {
         displayTitle = 'Finanzas';
       } else if (['Departamentos', 'Localidades'].includes(title)) {
         displayTitle = 'Recursos';

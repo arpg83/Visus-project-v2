@@ -399,7 +399,7 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                                 clearForm();
                                 refreshGrid();
                                 Notification.show("Datos Eliminados").setPosition(Position.TOP_CENTER);
-                                UI.getCurrent().navigate(ClientesView.class);
+                                UI.getCurrent().navigate(VendedoresView.class);
                         } catch (ObjectOptimisticLockingFailureException exception) {
                                 Notification n = Notification.show(
                                                 "Error al Eliminar los datos. Alguien mas está actualizando los datos.");
