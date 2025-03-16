@@ -132,7 +132,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 // Create UI
                 SplitLayout splitLayout = new SplitLayout();
                 splitLayout.setOrientation(SplitLayout.Orientation.VERTICAL);
-                splitLayout.setSplitterPosition(36);
+                splitLayout.setSplitterPosition(50);
 
                 avatarGroup = new CollaborationAvatarGroup(userInfo, null);
                 avatarGroup.getStyle().set("visibility", "hidden");

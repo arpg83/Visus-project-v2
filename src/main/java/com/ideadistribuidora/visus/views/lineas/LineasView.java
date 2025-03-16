@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
-import com.ideadistribuidora.visus.data.Depositos;
 import com.ideadistribuidora.visus.data.Lineas;
 import com.ideadistribuidora.visus.data.Rubros;
 import com.ideadistribuidora.visus.services.LineasService;
@@ -270,7 +269,7 @@ public class LineasView extends Div implements BeforeEnterObserver {
 
         formLayout.add(descripcion, rubros);
 
-        editorDiv.add(formLayout);
+        editorDiv.add(avatarGroup,formLayout);
         createButtonLayout(editorLayoutDiv);
 
         splitLayout.addToSecondary(editorLayoutDiv);

@@ -393,7 +393,7 @@ public class Articulos {
     public BigDecimal getPrecioFinalConIva() {
         if (precioFinalSinIva != null) {
             if(isEs_bonificado()){
-                if(bonificacion.compareTo(BigDecimal.ZERO)>0){
+                if(bonificacion != null && bonificacion.compareTo(BigDecimal.ZERO)>0){
                     BigDecimal bonif = precioFinalSinIva.multiply(bonificacion).divide(BigDecimal.valueOf(100));
                     precioFinalSinIva = precioFinalSinIva.subtract(bonif);
                 }

@@ -1,4 +1,4 @@
-package com.ideadistribuidora.visus.views.porcentuales;
+package com.ideadistribuidora.visus.views.coeficientes;
 
 import java.sql.SQLException;
 import java.util.Optional;
@@ -6,18 +6,15 @@ import java.util.UUID;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
-import com.ideadistribuidora.visus.data.Porcentuales;
-import com.ideadistribuidora.visus.data.enums.ClasificacionEnum;
-import com.ideadistribuidora.visus.services.PorcentualesService;
-import com.ideadistribuidora.visus.views.utils.ComponentUtils;
+import com.ideadistribuidora.visus.data.Coeficientes;
+import com.ideadistribuidora.visus.services.CoeficientesService;
+import com.ideadistribuidora.visus.views.utils.StringToShortConverter;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -41,40 +38,38 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-@PageTitle("Porcentuales")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 16)
-@Route(value = "17/:porcentualesID?/:action?(edit)")
-public class PorcentualesView extends Div implements BeforeEnterObserver {
+@PageTitle("Coeficientes")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 17)
+@Route(value = "18/:coeficientesID?/:action?(edit)")
+public class CoeficientesView extends Div implements BeforeEnterObserver {
 
-    private final String PORCENTUALES_ID = "porcentualesID";
-    private final String PORCENTUALES_EDIT_ROUTE_TEMPLATE = "17/%s/edit";
+    private final String COEFICIENTES_ID = "coeficientesID";
+    private final String COEFICIENTES_EDIT_ROUTE_TEMPLATE = "18/%s/edit";
 
-    private final Grid<Porcentuales> grid = new Grid<>(Porcentuales.class, false);
+    private final Grid<Coeficientes> grid = new Grid<>(Coeficientes.class, false);
 
     CollaborationAvatarGroup avatarGroup;
 
     private TextField descripcion;
-    private BigDecimalField porcentual;
-    private DatePicker inicioVigencia;
-    private DatePicker finVigencia;
-    private ComboBox<ClasificacionEnum> clasificacion;
-    private TextField searchDescripcion;
+    private BigDecimalField coeficiente;
+    private TextField cuotas;
+    private TextField searchCoeficiente;
 
     private final Button cancel = new Button("Cancelar");
     private final Button save = new Button("Grabar");
     private final Button delete = new Button("ELiminar");
 
-    private CollaborationBinder<Porcentuales> binder;
+    private CollaborationBinder<Coeficientes> binder;
 
-    private Porcentuales porcentuales;
+    private Coeficientes coeficientes;
 
-    private final PorcentualesService porcentualesService;
-  
-    private GridListDataView<Porcentuales> dataView;
+    private final CoeficientesService coeficientesService;
+    
+    private GridListDataView<Coeficientes> dataView;
 
-    public PorcentualesView(PorcentualesService porcentualesService) {
-        this.porcentualesService = porcentualesService;
-        addClassNames("porcentuales-view");
+    public CoeficientesView(CoeficientesService coeficientesService) {
+        this.coeficientesService = coeficientesService;
+        addClassNames("coeficientes-view");
 
         // UserInfo is used by Collaboration Engine and is used to share details
         // of users to each other to able collaboration. Replace this with
@@ -96,12 +91,10 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
         add(splitLayout);
 
         // Configure Grid
-        grid.addColumn(createPorcentualesRenderer()).setHeader("Descripción").setAutoWidth(true);
-        grid.addColumn(Porcentuales::getPorcentual).setHeader("Porcentual").setAutoWidth(true);
-        grid.addColumn(Porcentuales::getInicioVigencia).setHeader("Inicio Vigencia").setAutoWidth(true);
-        grid.addColumn(Porcentuales::getFinVigencia).setHeader("Fin Vigencia").setAutoWidth(true);
-        grid.addColumn(Porcentuales::getClasificacion).setHeader("Clasificacion").setAutoWidth(true);
-        dataView = grid.setItems(porcentualesService.localList());
+        grid.addColumn(createCoeficientesRenderer()).setHeader("Descripción").setAutoWidth(true);
+        grid.addColumn(Coeficientes::getCoeficiente).setHeader("Coficiente (%)").setAutoWidth(true);
+        grid.addColumn(Coeficientes::getCuotas).setHeader("Cuotas").setAutoWidth(true);
+        dataView = grid.setItems(coeficientesService.coeList());
         searchFilter(dataView);
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         // when a row is selected or deselected, populate form
@@ -109,27 +102,26 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
             if (event.getValue() != null) {
                 delete.setEnabled(true);
                 UI.getCurrent().navigate(
-                        String.format(PORCENTUALES_EDIT_ROUTE_TEMPLATE,
-                                event.getValue().getIdPorcentual()));
+                        String.format(COEFICIENTES_EDIT_ROUTE_TEMPLATE,
+                                event.getValue().getIdCoeficiente()));
             } else {
                 delete.setEnabled(false);
                 clearForm();
-                UI.getCurrent().navigate(PorcentualesView.class);
+                UI.getCurrent().navigate(CoeficientesView.class);
             }
         });
 
         // Configure Form
-        binder = new CollaborationBinder<>(Porcentuales.class, userInfo);
+        binder = new CollaborationBinder<>(Coeficientes.class, userInfo);
         // Bind fields. This is where you'd define e.g. validation rules
         binder.forField(descripcion).asRequired("Descripción es Requerido")
                 .bind("descripcion");
-        binder.forField(porcentual).asRequired("Porcentual es Requerido")
-                .bind("porcentual");
-        binder.forField(inicioVigencia).asRequired("Inicio Vigencia es Requerido")
-                .bind("inicioVigencia");
-        binder.forField(finVigencia).bind("finVigencia");
-        binder.forField(clasificacion).asRequired("Clasificación es Requerido")
-                .bind("clasificacion");
+        binder.forField(coeficiente).asRequired("Coeficiente es Requerido")
+                .bind("coeficiente");
+        binder.forField(cuotas, String.class)
+                                .asRequired("Cuotas es Requerido")
+                                .withConverter(new StringToShortConverter())
+                                .bind("cuotas");
 
         binder.addStatusChangeListener(
                 event -> save.setEnabled(binder.isValid()));
@@ -140,25 +132,27 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
             clearForm();
             refreshGrid();
             delete.setEnabled(false);
-            searchDescripcion.clear();
+            searchCoeficiente.clear();
+            // save.setEnabled(false);
         });
+
 
         save.addClickListener(e -> {
 
             try {
-                if (this.porcentuales == null) {
-                    this.porcentuales = new Porcentuales();
+                if (this.coeficientes == null) {
+                    this.coeficientes = new Coeficientes();
                 }
                 // if (this.departamentos.getProvincias() == null) {
                 // throw new Exception("Debe seleccionar una Provincia");
                 // }
-                binder.writeBean(this.porcentuales);
-                porcentualesService.update(this.porcentuales);
+                binder.writeBean(this.coeficientes);
+                coeficientesService.update(this.coeficientes);
 
                 clearForm();
                 refreshGrid();
                 Notification.show("Datos Guardados");
-                UI.getCurrent().navigate(PorcentualesView.class);
+                UI.getCurrent().navigate(CoeficientesView.class);
             } catch (ObjectOptimisticLockingFailureException exception) {
                 Notification n = Notification.show(
                         "Error al Actualizar los datos. Alguien mas está actualizando los datos.");
@@ -172,13 +166,8 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
                     SQLException e1 = (SQLException) except.getCause().getCause();
                     if (e1.getMessage().contains("Ya existe la llave")) {
                         Notification n = Notification.show(
-                                "El Porcentual " + this.porcentuales.getDescripcion()
+                                "El Coeficiente " + this.coeficientes.getDescripcion()
                                         + " ya existe");
-                        n.setPosition(Position.MIDDLE);
-                        n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                    if (e1.getMessage().contains("el valor nulo")) {
-                        Notification n = Notification.show("Debe seleccionar una Provincia");
                         n.setPosition(Position.MIDDLE);
                         n.addThemeVariants(NotificationVariant.LUMO_ERROR);
                     }
@@ -189,15 +178,15 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
 
         delete.addClickListener(e -> {
             try {
-                if (this.porcentuales == null) {
-                    this.porcentuales = new Porcentuales();
+                if (this.coeficientes == null) {
+                    this.coeficientes = new Coeficientes();
                 }
-                binder.writeBean(this.porcentuales);
-                porcentualesService.delete(this.porcentuales.getIdPorcentual());
+                binder.writeBean(this.coeficientes);
+                coeficientesService.delete(this.coeficientes.getIdCoeficiente());
                 clearForm();
                 refreshGrid();
                 Notification.show("Datos Eliminados").setPosition(Position.TOP_CENTER);
-                UI.getCurrent().navigate(PorcentualesView.class);
+                UI.getCurrent().navigate(CoeficientesView.class);
             } catch (ObjectOptimisticLockingFailureException exception) {
                 Notification n = Notification.show(
                         "Error al Eliminar los datos. Alguien mas está actualizando los datos.");
@@ -210,28 +199,28 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
         });
     }
 
-    private void searchFilter(GridListDataView<Porcentuales> dataView2) {
+    private void searchFilter(GridListDataView<Coeficientes> dataView2) {
         dataView.addFilter(local -> {
-            String searchTerm = searchDescripcion.getValue().trim();
+            String searchTerm = searchCoeficiente.getValue().trim();
 
             if (searchTerm.isEmpty())
                 return true;
 
-            boolean matchesFulldesc = matchesTerm(local.getDescripcion(),
+            boolean matchesFullName = matchesTerm(local.getDescripcion(),
                     searchTerm);
 
-            return matchesFulldesc;
+            return matchesFullName;
         });
     }
 
-    private LitRenderer<Porcentuales> createPorcentualesRenderer() {
-        return LitRenderer.<Porcentuales>of(
+    private LitRenderer<Coeficientes> createCoeficientesRenderer() {
+        return LitRenderer.<Coeficientes>of(
                 "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
                         + "  <vaadin-avatar name=\"${item.fullName}\"></vaadin-avatar>"
                         + "  <span> ${item.fullName} </span>"
                         + "</vaadin-horizontal-layout>")
 
-                .withProperty("fullName", Porcentuales::getDescripcion);
+                .withProperty("fullName", Coeficientes::getDescripcion);
     }
 
     private boolean matchesTerm(String value, String searchTerm) {
@@ -241,34 +230,33 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        Optional<Integer> porcentualesId = event.getRouteParameters().get(PORCENTUALES_ID)
+        Optional<Integer> coeficientesId = event.getRouteParameters().get(COEFICIENTES_ID)
                 .map(Integer::parseInt);
-        if (porcentualesId.isPresent()) {
-            Optional<Porcentuales> porcentualesFromBackend = porcentualesService
-                    .get(porcentualesId.get());
-            if (porcentualesFromBackend.isPresent()) {
-                populateForm(porcentualesFromBackend.get());
+        if (coeficientesId.isPresent()) {
+            Optional<Coeficientes> coeficientesFromBackend = coeficientesService
+                    .get(coeficientesId.get());
+            if (coeficientesFromBackend.isPresent()) {
+                populateForm(coeficientesFromBackend.get());
             } else {
                 Notification.show(
                         String.format("La Localidad solicitada no fué encontrado, ID = %d",
-                                porcentualesId.get()),
+                                coeficientesId.get()),
                         3000, Notification.Position.BOTTOM_START);
                 // when a row is selected but the data is no longer available,
                 // refresh grid
                 refreshGrid();
-                event.forwardTo(PorcentualesView.class);
+                event.forwardTo(CoeficientesView.class);
             }
         }
     }
 
     private void createHorizontalSearchLayout(HorizontalLayout searchHorizontalLayout) {
-        searchDescripcion = new TextField();
-        searchDescripcion.setPlaceholder("Buscar por Descripción");
-        searchDescripcion.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
-        searchDescripcion.setValueChangeMode(ValueChangeMode.EAGER);
-        searchDescripcion.addValueChangeListener(e -> dataView.refreshAll());
-        searchDescripcion.setWidth("500px");
-        searchHorizontalLayout.add(searchDescripcion);
+        searchCoeficiente = new TextField();
+        searchCoeficiente.setPlaceholder("Buscar por Coeficiente");
+        searchCoeficiente.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
+        searchCoeficiente.setValueChangeMode(ValueChangeMode.EAGER);
+        searchCoeficiente.addValueChangeListener(e -> dataView.refreshAll());
+        searchCoeficiente.setWidth("500px");
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
@@ -282,19 +270,10 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
         FormLayout formLayout = new FormLayout();
         descripcion = new TextField("Descripción");
         descripcion.setMaxLength(50);
-        porcentual = new BigDecimalField("Porcentual");
-        clasificacion = new ComboBox<ClasificacionEnum>("Clasificacion");
-        clasificacion.setPlaceholder("Seleccione Departamento");
-        clasificacion.setItems(ClasificacionEnum.values());
-        clasificacion.setItemLabelGenerator(ClasificacionEnum::getDisplayName);
-        clasificacion.setRequired(true);
-        clasificacion.setRequiredIndicatorVisible(true);
-        inicioVigencia = new DatePicker("Inicio Vigencia");
-        inicioVigencia.setI18n(ComponentUtils.getI18n());
-        finVigencia = new DatePicker("FIn Vigencia");
-        finVigencia.setI18n(ComponentUtils.getI18n());
-
-        formLayout.add(descripcion, porcentual, inicioVigencia, finVigencia, clasificacion);
+        coeficiente = new BigDecimalField("Coeficiente");
+        cuotas = new TextField("Cuotas");
+        
+        formLayout.add(descripcion, coeficiente, cuotas);
 
         editorDiv.add(formLayout);
         createButtonLayout(editorLayoutDiv);
@@ -323,7 +302,7 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
 
     private void refreshGrid() {
         grid.select(null);
-        dataView = grid.setItems(porcentualesService.localList());
+        dataView = grid.setItems(coeficientesService.coeList());
         searchFilter(dataView);
 
     }
@@ -332,16 +311,16 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
         populateForm(null);
     }
 
-    private void populateForm(Porcentuales value) {
-        this.porcentuales = value;
+    private void populateForm(Coeficientes value) {
+        this.coeficientes = value;
         String topic = null;
-        if (this.porcentuales != null) {
-            topic = "porcentuales/" + this.porcentuales.getIdPorcentual();
+        if (this.coeficientes != null) {
+            topic = "coeficientes/" + this.coeficientes.getIdCoeficiente();
             avatarGroup.getStyle().set("visibility", "visible");
         } else {
             avatarGroup.getStyle().set("visibility", "hidden");
         }
-        binder.setTopic(topic, () -> this.porcentuales);
+        binder.setTopic(topic, () -> this.coeficientes);
         avatarGroup.setTopic(topic);
 
     }

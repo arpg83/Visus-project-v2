@@ -1,6 +1,5 @@
 package com.ideadistribuidora.visus.services;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import com.ideadistribuidora.visus.data.Depositos;
 import com.ideadistribuidora.visus.data.Lineas;
 import com.ideadistribuidora.visus.data.Rubros;
 import com.ideadistribuidora.visus.data.repositories.LineasRepository;

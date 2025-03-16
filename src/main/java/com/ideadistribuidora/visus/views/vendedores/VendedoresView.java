@@ -12,20 +12,16 @@ import org.springframework.orm.jpa.JpaSystemException;
 import com.ideadistribuidora.visus.data.Comisiones;
 import com.ideadistribuidora.visus.data.Domicilios;
 import com.ideadistribuidora.visus.data.Localidades;
-import com.ideadistribuidora.visus.data.Provincias;
 import com.ideadistribuidora.visus.data.Vendedores;
 import com.ideadistribuidora.visus.data.Zonas;
 import com.ideadistribuidora.visus.data.enums.SituacionFiscalEnum;
-import com.ideadistribuidora.visus.data.enums.TipoComisionEnum;
 import com.ideadistribuidora.visus.data.enums.TipoDomicilioEnum;
 import com.ideadistribuidora.visus.services.VendedoresService;
-import com.ideadistribuidora.visus.views.clientes.ClientesView;
 import com.ideadistribuidora.visus.views.dialogs.DialogComisionesTramos;
 import com.ideadistribuidora.visus.views.dialogs.DialogConfirmacion;
 import com.ideadistribuidora.visus.views.dialogs.DialogSaveEditComisiones;
 import com.ideadistribuidora.visus.views.dialogs.DialogSaveEditZonas;
 import com.ideadistribuidora.visus.views.utils.ComponentUtils;
-import com.ideadistribuidora.visus.views.utils.ShortField;
 import com.ideadistribuidora.visus.views.utils.StringToLongConverter;
 import com.ideadistribuidora.visus.views.utils.StringToShortConverter;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
@@ -61,7 +57,6 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin.Minus.Horizontal;
 
 @PageTitle("Vendedores")
 @Menu(icon = "line-awesome/svg/columns-solid.svg", order = 2)
@@ -86,7 +81,7 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
         private TextField telefonoMovil;
         private TextField telefonoFijo;
         private EmailField email;
-        ComboBox<TipoDomicilioEnum> tipoDomicilio;
+        private ComboBox<TipoDomicilioEnum> tipoDomicilio;
         private ComboBox<Localidades> localidades;
         private TextField calle;
         private TextField numero;

@@ -30,9 +30,11 @@ const groupMenuItems = (menuItems: readonly Readonly<{ to: string; icon?: string
         displayTitle = 'Proveedores';
       } else if (['Comisiones','Zonas', 'Vendedores'].includes(title)) {
         displayTitle = 'Ventas';
+      }else if(['Transportistas'].includes(title)){
+        displayTitle = 'Transportistas';
       } else if (['Articulos', 'Medidas', 'Presentaciones', 'Depositos', 'Rubros', 'Ubicaciones', 'Lineas'].includes(title)) {
         displayTitle = 'Artículos';
-      } else if (['Alicuotas', 'Bancos', 'Porcentuales'].includes(title)) {
+      } else if (['Alicuotas', 'Bancos', 'Porcentuales','Coeficientes','Formas De Pago'].includes(title)) {
         displayTitle = 'Finanzas';
       } else if (['Departamentos', 'Localidades'].includes(title)) {
         displayTitle = 'Recursos';
@@ -79,7 +81,7 @@ export default function MainLayout() {
                 return (
                   <SideNavItem path={item.to} key={index}>
                     {item.icon ? <Icon src={item.icon} slot="prefix" /> : null}
-                    {item.title === "Clientes" || item.title === "Proveedores" || item.title === "Articulos" ? "Actualización" : item.title}
+                    {item.title === "Clientes" || item.title === "Proveedores" || item.title === "Articulos" || item.title === "Transportistas" ? "Actualización" : item.title === "Formas De Pago" ? "Formas de Pago" : item.title}
                   </SideNavItem>
                 );
               }
