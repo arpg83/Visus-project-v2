@@ -40,12 +40,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Zonas")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 4)
-@Route(value = "5/:zonasID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 5)
+@Route(value = "6/:zonasID?/:action?(edit)")
 public class ZonasView extends Div implements BeforeEnterObserver {
 
     private final String ZONAS_ID = "zonasID";
-    private final String ZONAS_EDIT_ROUTE_TEMPLATE = "5/%s/edit";
+    private final String ZONAS_EDIT_ROUTE_TEMPLATE = "6/%s/edit";
 
     private final Grid<Zonas> grid = new Grid<>(Zonas.class, false);
 

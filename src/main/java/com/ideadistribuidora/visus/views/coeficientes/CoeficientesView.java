@@ -39,12 +39,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Coeficientes")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 17)
-@Route(value = "18/:coeficientesID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 18)
+@Route(value = "19/:coeficientesID?/:action?(edit)")
 public class CoeficientesView extends Div implements BeforeEnterObserver {
 
     private final String COEFICIENTES_ID = "coeficientesID";
-    private final String COEFICIENTES_EDIT_ROUTE_TEMPLATE = "18/%s/edit";
+    private final String COEFICIENTES_EDIT_ROUTE_TEMPLATE = "19/%s/edit";
 
     private final Grid<Coeficientes> grid = new Grid<>(Coeficientes.class, false);
 

@@ -346,13 +346,23 @@ public class ClientesView extends Div implements BeforeEnterObserver {
                                         this.clientes.setClientesBancos(bancosList);
                                 }
                                 binder.writeBean(this.clientes);
-                                clientesService.update(this.clientes);
-                                h4DomWarning.setVisible(false);
-                                h4BankWarning.setVisible(false);
-                                clearForm();
-                                refreshGrid();
-                                Notification.show("Datos Guardados");
-                                UI.getCurrent().navigate(ClientesView.class);
+                                Optional<Clientes> obj = clientesService.findByTipoDeDocumentoAndNumeroDeDocumento(this.clientes.getTipoDeDocumento(),this.clientes.getNumeroDeDocumento());
+                                if(obj.isPresent() && this.clientes.getIdCliente()!=obj.get().getIdCliente()){
+                                        Notification n = Notification.show(
+                                                "El Cliente ya existe");
+                                n.setPosition(Position.MIDDLE);
+                                n.addThemeVariants(NotificationVariant.LUMO_WARNING);
+
+                                }else{
+                                        clientesService.update(this.clientes);
+                                        h4DomWarning.setVisible(false);
+                                        h4BankWarning.setVisible(false);
+                                        clearForm();
+                                        refreshGrid();
+                                        Notification.show("Datos Guardados");
+                                        UI.getCurrent().navigate(ClientesView.class);
+                                }
+                              
                         } catch (ObjectOptimisticLockingFailureException exception) {
                                 Notification n = Notification.show(
                                                 "Error al Actualizar los datos. Alguien mas está actualizando los datos.");

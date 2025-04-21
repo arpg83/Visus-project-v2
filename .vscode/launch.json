@@ -6,6 +6,14 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Debug using Hotswap Agent",
+      "request": "launch",
+      "javaExec": "C:\\Users\\Argenis Parra\\.vaadin\\jdk\\jbrsdk-21.0.6-windows-x64-b895.97\\bin\\java.exe",
+      "mainClass": "com.ideadistribuidora.visus.Application",
+      "vmArgs": "-XX:+AllowEnhancedClassRedefinition -XX:+ClassUnloading -XX:HotswapAgent=fatjar"
+    },
+    {
+      "type": "java",
       "name": "Launch Application",
       "request": "launch",
       "mainClass": "com.ideadistribuidora.visus.Application"

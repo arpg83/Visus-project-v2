@@ -59,12 +59,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Vendedores")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 2)
-@Route(value = "3/:vendedoresID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 3)
+@Route(value = "4/:vendedoresID?/:action?(edit)")
 public class VendedoresView extends Div implements BeforeEnterObserver {
 
         private final String VENDEDORES_ID = "vendedoresID";
-        private final String VENDEDORES_EDIT_ROUTE_TEMPLATE = "3/%s/edit";
+        private final String VENDEDORES_EDIT_ROUTE_TEMPLATE = "4/%s/edit";
 
         private final Grid<Vendedores> grid = new Grid<>(Vendedores.class, false);
         private final Grid<Zonas> gridZonas = new Grid<>(Zonas.class, false);
@@ -294,6 +294,7 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                         localidades -> String.valueOf(localidades.getIdLocalidad()),
                         idLocalidad -> vendedoresService
                         .findLocalidadesById(Integer.parseInt(idLocalidad)));
+                binder.forField(localidades).asRequired("Localidades es Requerido").bind("localidades");
                 binder.forField(depto).bind("depto");
                 binder.forField(casa).bind("casa");
                 binder.forField(calle).asRequired("Calle es Requerido").bind("calle");
@@ -523,8 +524,6 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
                 localidades = new ComboBox<>("Localidad");
                 localidades.setPlaceholder("Seleccione Localidad");
                 localidades.setItems(vendedoresService.getAllLocalidades());
-                localidades.setItemLabelGenerator(Localidades::getNombre);
-                localidades.setRequiredIndicatorVisible(true);
                 localidades.addBlurListener(event -> {
                         if (localidades.isEmpty()) {
                                 localidades.setErrorMessage("Localidad es Requerido");

@@ -38,6 +38,8 @@ const groupMenuItems = (menuItems: readonly Readonly<{ to: string; icon?: string
         displayTitle = 'Finanzas';
       } else if (['Departamentos', 'Localidades'].includes(title)) {
         displayTitle = 'Recursos';
+      }else if (['Precios','Listas-Porcentuales','Listas'].includes(title)) {
+        displayTitle = 'Precios';
       }
     }
 
@@ -81,7 +83,7 @@ export default function MainLayout() {
                 return (
                   <SideNavItem path={item.to} key={index}>
                     {item.icon ? <Icon src={item.icon} slot="prefix" /> : null}
-                    {item.title === "Clientes" || item.title === "Proveedores" || item.title === "Articulos" || item.title === "Transportistas" ? "Actualización" : item.title === "Formas De Pago" ? "Formas de Pago" : item.title}
+                    {item.title === "Clientes" || item.title === "Proveedores" || item.title === "Articulos" || item.title === "Transportistas" || item.title === "Precios" ? "Actualización" : item.title === "Formas De Pago" ? "Formas de Pago" : item.title}
                   </SideNavItem>
                 );
               }

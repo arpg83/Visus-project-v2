@@ -1,6 +1,7 @@
 package com.ideadistribuidora.visus.views.articulos;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ import org.springframework.orm.jpa.JpaSystemException;
 
 import com.ideadistribuidora.visus.data.Alicuotas;
 import com.ideadistribuidora.visus.data.Articulos;
+import com.ideadistribuidora.visus.data.Clientes;
 import com.ideadistribuidora.visus.data.Depositos;
 import com.ideadistribuidora.visus.data.Lineas;
 import com.ideadistribuidora.visus.data.Medidas;
@@ -19,6 +21,7 @@ import com.ideadistribuidora.visus.data.Ubicaciones;
 import com.ideadistribuidora.visus.data.enums.EstadoArticuloEnum;
 import com.ideadistribuidora.visus.data.enums.TipoArticuloEnum;
 import com.ideadistribuidora.visus.services.ArticulosService;
+import com.ideadistribuidora.visus.views.clientes.ClientesView;
 import com.ideadistribuidora.visus.views.utils.ComponentUtils;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
@@ -29,6 +32,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -58,12 +62,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Articulos")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 6)
-@Route(value = "7/:articulosID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 7)
+@Route(value = "8/:articulosID?/:action?(edit)")
 public class ArticulosView extends Div implements BeforeEnterObserver {
 
         private final String ARTICULOS_ID = "articulosID";
-        private final String ARTICULOS_EDIT_ROUTE_TEMPLATE = "7/%s/edit";
+        private final String ARTICULOS_EDIT_ROUTE_TEMPLATE = "8/%s/edit";
 
         private final Grid<Articulos> grid = new Grid<>(Articulos.class, false);
 
@@ -111,7 +115,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
 
         private CollaborationBinder<Articulos> binder;
 
-        private Articulos artic;
+        private Articulos articulos;
 
         private GridListDataView<Articulos> dataView;
 
@@ -132,7 +136,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 // Create UI
                 SplitLayout splitLayout = new SplitLayout();
                 splitLayout.setOrientation(SplitLayout.Orientation.VERTICAL);
-                splitLayout.setSplitterPosition(50);
+                splitLayout.setSplitterPosition(35);
 
                 avatarGroup = new CollaborationAvatarGroup(userInfo, null);
                 avatarGroup.getStyle().set("visibility", "hidden");
@@ -161,8 +165,11 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                         return checkbox;
                 }).setHeader("Bonificado")
                                 .setAutoWidth(true);
-                grid.addColumn("bonificacion").setHeader("Bonif.(%)").setAutoWidth(true);
-                grid.addColumn("precioFinalConIva").setHeader("Precio Final").setAutoWidth(true);
+                grid.addColumn(articulos -> articulos.getBonificacion() == null ? 0
+                                : articulos.getBonificacion().setScale(4, RoundingMode.HALF_UP)).setHeader("Bonif.(%)")
+                                .setAutoWidth(true);
+                grid.addColumn(articulos -> calcularPrecioFinal(articulos).getPrecioFinalConIva().setScale(4,
+                                RoundingMode.HALF_UP)).setHeader("Precio Final").setAutoWidth(true);
                 grid.addColumn(articulos -> articulos.getEstado().getDisplayEstadoArticulo()).setHeader("Estado")
                                 .setAutoWidth(true);
 
@@ -203,32 +210,34 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                 rubros -> String.valueOf(rubros.getIdRubro()),
                                 idRubros -> articulosService
                                                 .findByIdRubros(Integer.parseInt(idRubros)));
-                binder.bind(rubros, "rubros");
+                binder.forField(rubros).asRequired("Rubros es requerido").bind("rubros");
                 binder.setSerializer(Lineas.class,
                                 lineas -> String.valueOf(lineas.getIdLineas()),
                                 idLineas -> articulosService
                                                 .findByIdLinea(Integer.parseInt(idLineas)));
-                binder.bind(linea, "idLinea");
+                binder.forField(linea)
+                                .asRequired("Linea es Requerido")
+                                .bind("idLinea");
                 binder.setSerializer(Medidas.class,
                                 medidas -> String.valueOf(medidas.getIdMedida()),
                                 idMedida -> articulosService
                                                 .findByIdMedidas(Integer.parseInt(idMedida)));
-                binder.bind(medida, "idMedida");
+                binder.forField(medida).asRequired("Medida es requerido").bind("idMedida");
                 binder.setSerializer(Presentaciones.class,
                                 presentaciones -> String.valueOf(presentaciones.getIdPresentacion()),
                                 idpresentacion -> articulosService
                                                 .findByIdPresentaciones(Integer.parseInt(idpresentacion)));
-                binder.bind(presentacion, "idPresentacion");
+                binder.forField(presentacion).asRequired("Presentaciones es Requerido").bind("idPresentacion");
                 binder.setSerializer(Depositos.class,
                                 depositos -> String.valueOf(depositos.getIdDeposito()),
                                 idDeposito -> articulosService
                                                 .findByIdDepositos(Integer.parseInt(idDeposito)));
-                binder.bind(deposito, "deposito");
+                binder.forField(deposito).asRequired("Depósito es Requerido").bind("depositos");
                 binder.setSerializer(Ubicaciones.class,
                                 ubicaciones -> String.valueOf(ubicaciones.getIdubicacion()),
                                 idubicacion -> articulosService
                                                 .findByIdUbicaciones(Integer.parseInt(idubicacion)));
-                binder.bind(ubicacion, "idUbicacion");
+                binder.forField(ubicacion).asRequired("Ubicación en Requerido").bind("idUbicacion");
                 binder.forField(fila).asRequired("Fila es Requerido")
                                 .bind("fila");
                 binder.forField(columna).asRequired("Columna es Requerido")
@@ -237,7 +246,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                 proveedores -> String.valueOf(proveedores.getIdProveedor()),
                                 idProveedor -> articulosService
                                                 .findByIdProveedores(Integer.parseInt(idProveedor)));
-                binder.bind(proveedor, "idProveedor");
+                binder.forField(proveedor).asRequired("Proveedor es Requerido").bind("idProveedor");
                 binder.forField(tipo)
                                 .asRequired("Tipo es Requerido")
                                 .bind("tipo");
@@ -258,7 +267,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                 alicuotas -> String.valueOf(alicuotas.getIdAlicuota()),
                                 idAlicuota -> articulosService
                                                 .findByIdAlicuotas(Integer.parseInt(idAlicuota)));
-                binder.bind(alicuota, "idAlicuota");
+                binder.forField(alicuota).asRequired("Alicuota es Requerida").bind("idAlicuota");
 
                 binder.forField(bonificacion).bind("bonificacion");
                 binder.forField(esBonificado).bind("es_bonificado");
@@ -284,19 +293,36 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
 
                 save.addClickListener(e -> {
                         try {
-                                if (this.artic == null) {
-                                        this.artic = new Articulos();
+                                // Inicializa el objeto `articulos` si es null
+                                if (this.articulos == null) {
+                                        this.articulos = new Articulos();
                                 }
 
-                                binder.writeBean(this.artic);
-                                articulosService.update(this.artic);
-                                clearForm();
-                                refreshGrid();
-                                Notification.show("Datos Guardados");
-                                UI.getCurrent().navigate(ArticulosView.class);
+                                // Escribe los datos del formulario en el objeto `articulos`
+                                binder.writeBean(this.articulos);
+
+                                Optional<Articulos> obj = articulosService.findArticulosByCodigo_Barra(this.articulos.getCodigo_barra());
+                                if (obj.isPresent() && this.articulos.getIdArticulo() != obj.get().getIdArticulo()) {
+                                        Notification n = Notification.show(
+                                                        "El Articulo ya existe");
+                                        n.setPosition(Position.MIDDLE);
+                                        n.addThemeVariants(NotificationVariant.LUMO_WARNING);
+
+                                } else {
+                                        // Guarda el objeto en la base de datos
+                                        articulosService.update(this.articulos);
+
+                                        // Limpia el formulario y refresca la grilla
+                                        clearForm();
+                                        refreshGrid();
+
+                                        Notification.show("Datos Guardados");
+                                        UI.getCurrent().navigate(ArticulosView.class);
+                                }
+
                         } catch (ObjectOptimisticLockingFailureException exception) {
                                 Notification n = Notification.show(
-                                                "Error al Actualizar los datos. Alguien mas está actualizando los datos.");
+                                                "Error al Actualizar los datos. Alguien más está actualizando los datos.");
                                 n.setPosition(Position.MIDDLE);
                                 n.addThemeVariants(NotificationVariant.LUMO_ERROR);
                         } catch (ValidationException validationException) {
@@ -317,11 +343,11 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
 
                 delete.addClickListener(e -> {
                         try {
-                                if (this.artic == null) {
-                                        this.artic = new Articulos();
+                                if (this.articulos == null) {
+                                        this.articulos = new Articulos();
                                 }
-                                binder.writeBean(this.artic);
-                                articulosService.delete(this.artic.getIdArticulo());
+                                binder.writeBean(this.articulos);
+                                articulosService.delete(this.articulos.getIdArticulo());
                                 clearForm();
                                 refreshGrid();
                                 Notification.show("Datos Eliminados").setPosition(Position.TOP_CENTER);
@@ -357,7 +383,8 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                         boolean matchesRubros = matchesTerm(articSearh.getIdLinea().getRubros().getDescripcion(),
                                         searchTerm3);
                         boolean matchesLinea = matchesTerm(articSearh.getIdLinea().getDescripcion(), searchTerm4);
-                        boolean matchesEstado = matchesTerm(articSearh.getEstado().getDisplayEstadoArticulo(), searchTerm5);
+                        boolean matchesEstado = matchesTerm(articSearh.getEstado().getDisplayEstadoArticulo(),
+                                        searchTerm5);
 
                         return matchesFullName && matchesDescripcion && matchesRubros && matchesLinea && matchesEstado;
                 });
@@ -384,19 +411,18 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 if (articulosId.isPresent()) {
                         Optional<Articulos> articulosFromBackend = articulosService.get(articulosId.get());
                         if (articulosFromBackend.isPresent()) {
+                                // refreshGrid(); // Refresca la grilla antes de mostrar los datos
+                                // clearFields();
+                                clearForm();
                                 populateForm(articulosFromBackend.get());
                         } else {
                                 Notification.show(
-                                                String.format("The requested articulos was not found, ID = %d",
+                                                String.format("El artículo solicitado no fue encontrado, ID = %d",
                                                                 articulosId.get()),
                                                 3000, Notification.Position.BOTTOM_START);
-                                // when a row is selected but the data is no longer available,
-                                // refresh grid
                                 refreshGrid();
                                 event.forwardTo(ArticulosView.class);
                         }
-                } else {
-                        clearForm();
                 }
         }
 
@@ -421,8 +447,6 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 rubros.setPlaceholder("Seleccione Rubros");
                 rubros.setItems(articulosService.getAllRubros());
                 rubros.setItemLabelGenerator(Rubros::getDescripcion);
-                rubros.setRequired(true);
-                rubros.setRequiredIndicatorVisible(true);
                 rubros.addBlurListener(e -> {
                         Rubros selectedRubros = rubros.getValue();
                         if (selectedRubros != null) {
@@ -437,28 +461,20 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 linea.setPlaceholder("Seleccione Linea");
                 linea.setItems(articulosService.getAllLineas());
                 linea.setItemLabelGenerator(Lineas::getDescripcion);
-                linea.setRequired(true);
-                linea.setRequiredIndicatorVisible(true);
                 medida = new ComboBox<>("Medida");
                 medida.setWidth("12.5%");
                 medida.setPlaceholder("Seleccione Medida");
                 medida.setItems(articulosService.getAllMedidas());
                 medida.setItemLabelGenerator(Medidas::getDescripcion);
-                medida.setRequired(true);
-                medida.setRequiredIndicatorVisible(true);
                 presentacion = new ComboBox<>("Presentaciones");
                 presentacion.setWidth("12.5%");
                 presentacion.setPlaceholder("Seleccione Presentaciones");
                 presentacion.setItems(articulosService.getAllPresentaciones());
                 presentacion.setItemLabelGenerator(Presentaciones::getDescripcion);
-                presentacion.setRequired(true);
-                presentacion.setRequiredIndicatorVisible(true);
                 deposito = new ComboBox<>("Depósito");
                 deposito.setPlaceholder("Seleccione Depósito");
                 deposito.setItems(articulosService.getAllDepositos());
                 deposito.setItemLabelGenerator(Depositos::getDescripcion);
-                deposito.setRequired(true);
-                deposito.setRequiredIndicatorVisible(true);
                 deposito.addBlurListener(event -> {
                         Depositos selectedDepositos = deposito.getValue();
                         if (selectedDepositos != null) {
@@ -472,16 +488,12 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 ubicacion.setPlaceholder("Seleccione Ubicación");
                 ubicacion.setItems(articulosService.getAllUbicacion());
                 ubicacion.setItemLabelGenerator(Ubicaciones::getDescripcion);
-                ubicacion.setRequired(true);
-                ubicacion.setRequiredIndicatorVisible(true);
                 fila = new IntegerField("Fila");
                 columna = new IntegerField("Columna");
                 proveedor = new ComboBox<>("Proveedor");
                 proveedor.setPlaceholder("Seleccione Provedor");
                 proveedor.setItems(articulosService.getAllProveedores());
                 proveedor.setItemLabelGenerator(Proveedores::getNombreReal);
-                proveedor.setRequired(true);
-                proveedor.setRequiredIndicatorVisible(true);
                 proveedor.getStyle().setWidth("100%");
                 tipo = new ComboBox<>("Tipo de Articulo");
                 tipo.setPlaceholder("Seleccione Tipo de Articulo");
@@ -502,8 +514,15 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                                 && mUtilidad.compareTo(BigDecimal.ZERO) > 0) {
                                         BigDecimal res = precCost.multiply(mUtilidad).divide(BigDecimal.valueOf(100));
                                         ganancia.setValue(res);
-                                        precioFinalSinIva.setValue(precCost.add(res));
+                                        precioFinalSinIva.setValue(precCost.add(res).setScale(4, RoundingMode.HALF_UP));
                                 }
+                        }
+                        BigDecimal precFinSinIva = precioFinalSinIva.getValue();
+                        if (bonificacion.getValue() != null && bonificacion.getValue().compareTo(BigDecimal.ZERO) > 0) {
+                                precioFinalSinIva.setValue(precFinSinIva.subtract(
+                                                precFinSinIva.multiply(bonificacion.getValue())
+                                                                .divide(BigDecimal.valueOf(100)))
+                                                .setScale(4, RoundingMode.HALF_UP));
                         }
 
                 });
@@ -519,9 +538,16 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                 if (precCost.compareTo(BigDecimal.ZERO) > 0
                                                 && mUtilidad.compareTo(BigDecimal.ZERO) > 0) {
                                         BigDecimal res = precCost.multiply(mUtilidad).divide(BigDecimal.valueOf(100));
-                                        ganancia.setValue(res);
-                                        precioFinalSinIva.setValue(precCost.add(res));
+                                        ganancia.setValue(res.setScale(4, RoundingMode.HALF_UP));
+                                        precioFinalSinIva.setValue(precCost.add(res).setScale(4, RoundingMode.HALF_UP));
                                 }
+                        }
+                        BigDecimal precFinSinIva = precioFinalSinIva.getValue();
+                        if (bonificacion.getValue() != null && bonificacion.getValue().compareTo(BigDecimal.ZERO) > 0) {
+                                precioFinalSinIva.setValue(precFinSinIva.subtract(
+                                                precFinSinIva.multiply(bonificacion.getValue())
+                                                                .divide(BigDecimal.valueOf(100)))
+                                                .setScale(4, RoundingMode.HALF_UP));
                         }
 
                 });
@@ -538,8 +564,6 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 alicuota.setPlaceholder("Seleccione Alicuota");
                 alicuota.setItems(articulosService.getAllAlicuotas());
                 alicuota.setItemLabelGenerator(Alicuotas::getDescripcion);
-                alicuota.setRequired(true);
-                alicuota.setRequiredIndicatorVisible(true);
                 alicuota.addBlurListener(e -> {
 
                         BigDecimal alic = BigDecimal.ZERO;
@@ -554,7 +578,8 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                 if (alic.compareTo(BigDecimal.ZERO) > 0 && preFinSinIv.compareTo(BigDecimal.ZERO) > 0) {
                                         BigDecimal resConIva = precioFinalSinIva.getValue().multiply(alic)
                                                         .divide(BigDecimal.valueOf(100));
-                                        precioFinalConIva.setValue(preFinSinIv.add(resConIva));
+                                        precioFinalConIva.setValue(
+                                                        preFinSinIv.add(resConIva).setScale(4, RoundingMode.HALF_UP));
                                 } else {
                                         precioFinalConIva.setValue(BigDecimal.ZERO);
                                 }
@@ -579,21 +604,74 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                         if (e.getValue()) {
                                 bonificacion.setEnabled(true);
                         } else {
+                                bonificacion.setValue(BigDecimal.ZERO);
+                                if (precioCosto.getValue() != null && ganancia.getValue() != null) {
+                                        precioFinalSinIva.setValue(precioCosto.getValue().add(ganancia.getValue())
+                                                        .setScale(4, RoundingMode.HALF_UP));
+                                }
+                                BigDecimal alic = BigDecimal.ZERO;
+                                BigDecimal preFinSinIv = precioFinalSinIva.getValue();
+                                if (alicuota.getValue() != null && preFinSinIv != null) {
+                                        Alicuotas alicuotas = alicuota.getValue();
+                                        alic = alicuotas.getDescripcion().contains("%")
+                                                        ? BigDecimal.valueOf(Double
+                                                                        .parseDouble(alicuotas.getDescripcion().replace(
+                                                                                        "%",
+                                                                                        "")))
+                                                        : BigDecimal.ZERO;
+                                        if (alic.compareTo(BigDecimal.ZERO) > 0
+                                                        && preFinSinIv.compareTo(BigDecimal.ZERO) > 0) {
+                                                BigDecimal resConIva = precioFinalSinIva.getValue().multiply(alic)
+                                                                .divide(BigDecimal.valueOf(100));
+                                                precioFinalConIva.setValue(preFinSinIv.add(resConIva).setScale(4,
+                                                                RoundingMode.HALF_UP));
+                                        } else {
+                                                precioFinalConIva.setValue(BigDecimal.ZERO);
+                                        }
+                                }
+                                // precioFinalSinIva.setValue(precFinSinIva);
                                 bonificacion.setEnabled(false);
+
                         }
                 });
                 bonificacion = new BigDecimalField("Porcentaje Bonificado");
                 bonificacion.setSuffixComponent(new Span("%"));
                 bonificacion.getStyle().setWidth("100%");
                 bonificacion.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+                bonificacion.setEnabled(false);
                 bonificacion.addBlurListener(e -> {
                         ComponentUtils.getRoundedValue(bonificacion);
                         BigDecimal precFinSinIva = precioFinalSinIva.getValue();
-                        if (bonificacion.getValue() != null && bonificacion.getValue().compareTo(BigDecimal.ZERO) > 0 &&
-                                        precioFinalSinIva != null) {
+                        if (bonificacion.getValue() != null && bonificacion.getValue().compareTo(BigDecimal.ZERO) > 0) {
                                 precioFinalSinIva.setValue(precFinSinIva.subtract(
                                                 precFinSinIva.multiply(bonificacion.getValue())
-                                                                .divide(BigDecimal.valueOf(100))));
+                                                                .divide(BigDecimal.valueOf(100)))
+                                                .setScale(4, RoundingMode.HALF_UP));
+                        } else {
+                                // precioFinalSinIva.setValue(precFinSinIva);
+                                Notification n = Notification.show(
+                                                "El Porcentaje de Bonificación debe ser mayor a 0");
+                                n.setPosition(Position.MIDDLE);
+                                n.addThemeVariants(NotificationVariant.LUMO_WARNING);
+                                esBonificado.setValue(false);
+                        }
+                        BigDecimal alic = BigDecimal.ZERO;
+                        BigDecimal preFinSinIv = precioFinalSinIva.getValue();
+                        if (alicuota.getValue() != null && preFinSinIv != null) {
+                                Alicuotas alicuotas = alicuota.getValue();
+                                alic = alicuotas.getDescripcion().contains("%")
+                                                ? BigDecimal.valueOf(Double
+                                                                .parseDouble(alicuotas.getDescripcion().replace("%",
+                                                                                "")))
+                                                : BigDecimal.ZERO;
+                                if (alic.compareTo(BigDecimal.ZERO) > 0 && preFinSinIv.compareTo(BigDecimal.ZERO) > 0) {
+                                        BigDecimal resConIva = precioFinalSinIva.getValue().multiply(alic)
+                                                        .divide(BigDecimal.valueOf(100));
+                                        precioFinalConIva.setValue(
+                                                        preFinSinIv.add(resConIva).setScale(4, RoundingMode.HALF_UP));
+                                } else {
+                                        precioFinalConIva.setValue(BigDecimal.ZERO);
+                                }
                         }
                 });
                 precioFinalConIva = new BigDecimalField("Precio Final Con IVA");
@@ -609,7 +687,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 estado.setItems(EstadoArticuloEnum.values());
                 estado.setItemLabelGenerator(EstadoArticuloEnum::getDisplayEstadoArticulo);
                 estado.getStyle().setWidth("50%");
-                VerticalLayout datGenArt = new VerticalLayout();
+                FormLayout datGenArt = new FormLayout();
                 datGenArt.setId("datGenArt");
                 HorizontalLayout dataArtic = new HorizontalLayout();
                 dataArtic.setClassName("horizontal-layout");
@@ -658,21 +736,19 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 movStockHor2.add(estado);
                 movStock.add(stockTitle, movStockHor, movStockHor2);
                 dataArtic2.add(ubicPrecios, provFech, movStock);
-                datGenArt.add(avatarGroup, dataArtic, dataArtic2);
+                datGenArt.add(dataArtic, dataArtic2);
+                datGenArt.setResponsiveSteps(
+                                new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP)
+                // new FormLayout.ResponsiveStep("500px", 2,
+                // FormLayout.ResponsiveStep.LabelsPosition.TOP)
+                );
                 createButtonLayout(datGenArt);
-                // formLayout.add(datGenArt);
-
-                splitLayout.addToSecondary(datGenArt);
+                VerticalLayout avatarForm = new VerticalLayout();
+                avatarForm.add(avatarGroup, datGenArt);
+                splitLayout.addToSecondary(avatarForm);
         }
 
-        private void limitsBigdecimal(BigDecimalField bigDecimalField) {
-                String value = bigDecimalField.getValue() != null ? bigDecimalField.getValue().toPlainString() : "0";
-                // Permitir solo números, comas, puntos y signo negativo
-                value = value.replaceAll("[^0-9.,-]", ""); // Filtrar los caracteres no permitidos
-                bigDecimalField.setValue(new BigDecimal(value.isEmpty() ? "0" : value));
-        }
-
-        private void createButtonLayout(VerticalLayout datGenArt) {
+        private void createButtonLayout(FormLayout datGenArt) {
                 HorizontalLayout buttonLayout = new HorizontalLayout();
 
                 buttonLayout.setClassName("button-layout");
@@ -730,25 +806,112 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
 
         private void refreshGrid() {
                 grid.select(null);
-                grid.setItems(articulosService.articulosList());
+                grid.getDataProvider().refreshAll();
+                dataView = grid.setItems(articulosService.articulosList());
+                searchFilter(dataView);
         }
 
         private void clearForm() {
+                clearFields();
                 populateForm(null);
         }
 
         private void populateForm(Articulos value) {
-                this.artic = value;
+                this.articulos = value;
                 String topic = null;
-                if (this.artic != null) {
-                        topic = "articulos/" + this.artic.getIdArticulo();
-                        avatarGroup.getStyle().set("visibility", "visible");
-                } else {
-                        avatarGroup.getStyle().set("visibility", "hidden");
-                }
-                binder.setTopic(topic, () -> this.artic);
-                avatarGroup.setTopic(topic);
 
+                if (this.articulos != null) {
+                        this.articulos.setRubros(this.articulos.getIdLinea().getRubros());
+                        this.articulos.setDepositos(this.articulos.getIdUbicacion().getDepositos());
+                        this.articulos.setBonificacion(this.articulos.getBonificacion() == null ? BigDecimal.valueOf(0)
+                                        : this.articulos.getBonificacion());
+                        this.articulos = calcularPrecioFinal(this.articulos);
+
+                        topic = "articulos/" + this.articulos.getIdArticulo();
+                        avatarGroup.getStyle().set("visibility", "visible");
+
+                } else {
+                        esBonificado.setValue(false);
+                        bonificacion.setEnabled(false);
+                        avatarGroup.getStyle().set("visibility", "hidden");
+
+                        // Limpiar los campos del formulario
+                        binder.reset(null);
+                }
+
+                binder.setTopic(topic, () -> this.articulos);
+                avatarGroup.setTopic(topic);
         }
 
+        private Articulos calcularPrecioFinal(Articulos artic) {
+                if (artic.getPrecio_costo() != null && artic.getMargen_utilidad() != null) {
+                        BigDecimal res = artic.getPrecio_costo().multiply(artic.getMargen_utilidad())
+                                        .divide(BigDecimal.valueOf(100));
+                        artic.setGanancia(res.setScale(4, RoundingMode.HALF_UP));
+                        artic.setPrecioFinalSinIva(artic.getPrecio_costo().add(res).setScale(4, RoundingMode.HALF_UP));
+                }
+                if (artic.getBonificacion() != null
+                                && artic.getBonificacion().compareTo(BigDecimal.ZERO) > 0 &&
+                                artic.isEs_bonificado()) {
+
+                        artic.setPrecioFinalSinIva(artic.getPrecioFinalSinIva().subtract(
+                                        artic.getPrecioFinalSinIva().multiply(artic.getBonificacion())
+                                                        .divide(BigDecimal.valueOf(100)))
+                                        .setScale(4, RoundingMode.HALF_UP));
+
+                }
+                BigDecimal alic = artic.getIdAlicuota().getDescripcion().contains("%")
+                                ? BigDecimal.valueOf(Double
+                                                .parseDouble(artic.getIdAlicuota().getDescripcion()
+                                                                .replace("%", "")))
+                                : BigDecimal.ZERO;
+                BigDecimal resConIva = artic.getPrecioFinalSinIva().multiply(alic)
+                                .divide(BigDecimal.valueOf(100));
+                artic.setPrecioFinalConIva(
+                                artic.getPrecioFinalSinIva().add(resConIva).setScale(4, RoundingMode.HALF_UP));
+                return artic;
+        }
+
+        private void clearFields() {
+                codigoInterno.clear();
+                codigoBarra.clear();
+                descripcion.clear();
+                nroLote.clear();
+                rubros.clear();
+                linea.clear();
+                medida.clear();
+                presentacion.clear();
+                deposito.clear();
+                ubicacion.clear();
+                fila.clear();
+                columna.clear();
+                proveedor.clear();
+                tipo.clear();
+                stock.clear();
+                stockMinimo.clear();
+                stockMaximo.clear();
+                precioCosto.clear();
+                margenUtilidad.clear();
+                ganancia.clear();
+                precioFinalSinIva.clear();
+                alicuota.clear();
+                fechaActPrecios.clear();
+                fechaCompra.clear();
+                fechaVencimiento.clear();
+                fechaBaja.clear();
+                esBonificado.clear();
+                bonificacion.clear();
+                precioFinalConIva.clear();
+                estado.clear();
+                searchCodigo.clear();
+                searchDescrpcion.clear();
+                searchRubro.clear();
+                searchLinea.clear();
+                searchEstado.clear();
+        }
+
+        public void refresh() {
+                clearForm();
+                refreshGrid();
+        }
 }

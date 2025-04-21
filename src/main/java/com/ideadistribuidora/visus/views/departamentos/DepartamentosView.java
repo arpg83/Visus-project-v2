@@ -41,12 +41,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Departamentos")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 22)
-@Route(value = "23/:departamentosID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 23)
+@Route(value = "24/:departamentosID?/:action?(edit)")
 public class DepartamentosView extends Div implements BeforeEnterObserver {
 
         private final String DEPARTAMENTOS_ID = "departamentosID";
-        private final String DEPARTAMENTOS_EDIT_ROUTE_TEMPLATE = "23/%s/edit";
+        private final String DEPARTAMENTOS_EDIT_ROUTE_TEMPLATE = "24/%s/edit";
 
         private final Grid<Departamentos> grid = new Grid<>(Departamentos.class, false);
 
@@ -122,7 +122,7 @@ public class DepartamentosView extends Div implements BeforeEnterObserver {
                                 idProvincia -> departamentosService
                                                 .findById(Integer.parseInt(idProvincia)));
 
-                binder.bind(provincia, "provincias");
+                binder.forField(provincia).asRequired("Provincia es requerido").bind( "provincias");
 
                 binder.addStatusChangeListener(
                                 event -> save.setEnabled(binder.isValid()));
@@ -294,8 +294,7 @@ public class DepartamentosView extends Div implements BeforeEnterObserver {
                 provinciaList = departamentosService.getAllProvincias();
                 provincia.setItems(provinciaList);
                 provincia.setItemLabelGenerator(Provincias::getProvincia);
-                provincia.setRequired(true);
-                provincia.setRequiredIndicatorVisible(true);
+                
 
                 formLayout.add(nombre, provincia);
 

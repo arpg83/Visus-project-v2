@@ -62,12 +62,16 @@ public class ArticulosService {
     }
 
     public Optional<Articulos> get(int id) {
-        // return repository.findById(id);
-        return repository.finByIdWithGanancia(id);
+        return repository.findById(id);
+        //return repository.finByIdWithGanancia(id);
     }
 
     public Articulos update(Articulos entity) {
         return repository.save(entity);
+    }
+
+    public List<Articulos> updateList(List<Articulos> articulos) {
+        return repository.saveAll(articulos);
     }
 
     public void delete(int id) {
@@ -83,28 +87,9 @@ public class ArticulosService {
     }
 
     public List<Articulos> articulosList() {
-        List<Articulos> artList = repository.findAllWithGanancia();
+        List<Articulos> artList = repository.findAll();
 
         return artList;
-        // .stream()
-        // .map(articulo -> {
-        // BigDecimal ganancia = articulo.getPrecioCosto()
-        // .multiply(articulo.getMargenUtilidad())
-        // .divide(BigDecimal.valueOf(100));
-        // articulo.setGanancia(ganancia); // Asignar el resultado a la variable
-        // 'ganancia'
-        // articulo.setPrecioFinalSinIva(articulo.getPrecioCosto().add(articulo.getGanancia()));
-        // BigDecimal alic = articulo.getAlicuota().getDescripcion().contains("%")
-        // ? BigDecimal.valueOf(Double
-        // .valueOf(articulo.getAlicuota().getDescripcion()
-        // .replace("%", "")))
-        // : BigDecimal.ZERO;
-        // BigDecimal resConIva = articulo.getPrecioFinalSinIva().multiply(alic)
-        // .divide(BigDecimal.valueOf(100));
-        // articulo.setPrecioFinalConIva(articulo.getPrecioFinalSinIva().add(resConIva));
-        // return articulo;
-        // })
-        // .collect(Collectors.toList());
     }
 
     public int count() {
@@ -237,5 +222,21 @@ public class ArticulosService {
 
     public List<Lineas> findLineasByRubros(Rubros selectedRubros) {
         return lineasRepository.findLineasByRubros(selectedRubros);
+    }
+
+    public List<Articulos> findArticulosByIdLinea( Lineas linea) {
+        return repository.findArticulosByIdLinea(linea);
+    }
+
+    public List<Articulos> findArticulosByProveedor(Proveedores value) {
+        return repository.findArticulosByIdProveedor(value);
+    }
+
+    public List<Articulos> findArticulosByMargen_utilidad(BigDecimal value) {
+        return repository.findArticulosByMargen_utilidad(value);
+    }
+
+    public Optional<Articulos> findArticulosByCodigo_Barra(String codigo_barra) {
+        return repository.findArticulosByCodigo_Barra(codigo_barra);
     }
 }

@@ -1,6 +1,5 @@
 package com.ideadistribuidora.visus.services;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import com.ideadistribuidora.visus.data.Coeficientes;
 import com.ideadistribuidora.visus.data.FormasDePago;
-import com.ideadistribuidora.visus.data.Rubros;
 import com.ideadistribuidora.visus.data.repositories.CoeficientesRepository;
 import com.ideadistribuidora.visus.data.repositories.FormasDePagoRepository;
 
@@ -56,10 +54,10 @@ public class FormasDePagoService {
     }
 
     public Coeficientes findCoeficientesById(int idCoeficiente) {
-         Optional<Coeficientes> rub = coeficientesRepository.findById(idCoeficiente);
+         Optional<Coeficientes> coe = coeficientesRepository.findById(idCoeficiente);
         Coeficientes coeficientes = new Coeficientes();
-        if (rub.isPresent()) {
-            coeficientes = rub.get();
+        if (coe.isPresent()) {
+            coeficientes = coe.get();
         }
         return coeficientes;
         

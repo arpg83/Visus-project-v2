@@ -135,4 +135,8 @@ public class ProveedoresService {
         domiciliosRepository.deleteById(id);
     }
 
+    public Optional<Proveedores> findByIdDocumentoAndNumero(int idDocumento, Long numero) {
+        return repository.findByIdDocumentoAndNumero(idDocumento, numero);
+    }
+
 }

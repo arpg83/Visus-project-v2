@@ -1,6 +1,5 @@
 package com.ideadistribuidora.visus.data;
 
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.ColumnTransformer;

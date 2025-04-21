@@ -36,7 +36,7 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class ClientesService {
-
+    
     private final ClientesRepository repository;
     private final DocumentosRepository docRepository;
     private final DomiciliosRepository domiciliosRepository;
@@ -166,6 +166,10 @@ public class ClientesService {
 
     public void saveClientesBancosList(Set<ClientesBancos> clientesBancosList) {
         clientesBancosRepository.saveAll(clientesBancosList);
+    }
+
+    public Optional<Clientes> findByTipoDeDocumentoAndNumeroDeDocumento(int tipoDeDocumento, Long numeroDeDocumento) {
+        return repository.findByTipoDeDocumentoAndNumeroDeDocumento(tipoDeDocumento, numeroDeDocumento);
     }
 
 }

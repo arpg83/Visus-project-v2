@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -52,12 +53,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Formas De Pago")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 18)
-@Route(value = "19/:formasDePagoID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 19)
+@Route(value = "20/:formasDePagoID?/:action?(edit)")
 public class FormasDePagoView extends Div implements BeforeEnterObserver {
 
     private final String FORMASDEPAGO_ID = "formasDePagoID";
-    private final String FORMASDEPAGO_EDIT_ROUTE_TEMPLATE = "19/%s/edit";
+    private final String FORMASDEPAGO_EDIT_ROUTE_TEMPLATE = "20/%s/edit";
 
     private final Grid<FormasDePago> grid = new Grid<>(FormasDePago.class, false);
     private final Grid<Coeficientes> gridSimulador = new Grid<>(Coeficientes.class, false);
@@ -145,16 +146,16 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         grid.addColumn(formasDePago -> formasDePago.getIdCoeficiente().getDescripcion()).setHeader("Descripción").setAutoWidth(true);
         grid.addColumn(formasDePago -> formasDePago.getIdCoeficiente().getCoeficiente()).setHeader("Coeficiente").setAutoWidth(true);
         grid.addColumn(formasDePago -> formasDePago.getIdCoeficiente().getCuotas()).setHeader("Cuotas").setAutoWidth(true);
-        grid.addComponentColumn(articulos -> {
+        grid.addComponentColumn(formasDePago -> {
                     Checkbox checkbox = new Checkbox();
-                    checkbox.setValue(formasDePago.isEsDtoProntoPago());
+                    checkbox.setValue(formasDePago==null?false:formasDePago.isEsDtoProntoPago());
                     checkbox.setEnabled(false);
                     return checkbox;
             }).setHeader("Pronto Pago").setAutoWidth(true);
         grid.addColumn(FormasDePago::getDtoProntoPago).setHeader("Dto. PP(%)").setAutoWidth(true);
-        grid.addComponentColumn(articulos -> {
+        grid.addComponentColumn(formasDePago -> {
                     Checkbox checkbox = new Checkbox();
-                    checkbox.setValue(formasDePago.isMesesCompletos());
+                    checkbox.setValue(formasDePago==null?false:formasDePago.isMesesCompletos());
                     checkbox.setEnabled(false);
                     return checkbox;
             }).setHeader("Meses Completos").setAutoWidth(true);
@@ -181,22 +182,8 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
                      .setHeader("Fecha").setAutoWidth(true);
         gridSimulador.addColumn(Coeficientes::getMonto).setHeader("Monto").setAutoWidth(true);
 
-        //dataView = gridSimulador.setItems(formasDePagoService.formasDePagoList());
-        searchFilter(dataView);
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
-        // when a row is selected or deselected, populate form
-        grid.asSingleSelect().addValueChangeListener(event -> {
-            if (event.getValue() != null) {
-                delete.setEnabled(true);
-                UI.getCurrent().navigate(
-                        String.format(FORMASDEPAGO_EDIT_ROUTE_TEMPLATE,
-                                event.getValue().getIdFormasPago()));
-            } else {
-                delete.setEnabled(false);
-                clearForm();
-                UI.getCurrent().navigate(FormasDePagoView.class);
-            }
-        });
+        gridSimulador.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);
+        
 
         // Configure Form
         binder = new CollaborationBinder<>(FormasDePago.class, userInfo);
@@ -206,7 +193,7 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         binder.setSerializer(Coeficientes.class,
                 coeficientes -> String.valueOf(coeficientes.getIdCoeficiente()),
                 id -> formasDePagoService.findCoeficientesById(Integer.parseInt(id)));
-        binder.bind(coeficienteDesc, "coeficienteDesc");
+        binder.bind(coeficienteDesc, "idCoeficiente");
         binder.forField(coeficiente).asRequired("Coeficiente es Requerido")
                 .bind("coeficiente"); 
         binder.forField(cuotas, String.class)
@@ -315,7 +302,7 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
                         + "  <span> ${item.fullName} </span>"
                         + "</vaadin-horizontal-layout>")
 
-                .withProperty("fullName", FormasDePago::getModalidad);
+                .withProperty("fullName", formasDePago -> formasDePago.getModalidad().getModalidadDePago());
     }
 
     private boolean matchesTerm(String value, String searchTerm) {
@@ -364,7 +351,11 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         coeficienteSim.setItems(formasDePagoService.getAllCoefiencientes());
         coeficienteSim.setItemLabelGenerator(Coeficientes::getDescripcion);
         coeficienteSim.setWidth("25%");
-        valorSim = new BigDecimalField("Coeficiente");
+        coeficienteSim.addValueChangeListener(e ->{
+            valorSim.setValue(e.getValue().getCoeficiente());
+            cuotasSim.setValue(String.valueOf(e.getValue().getCuotas()));
+        });
+        valorSim = new BigDecimalField("Valor");
         valorSim.setWidth("25%");
         cuotasSim = new TextField("Cuotas");
         cuotasSim.setWidth("25%");
@@ -380,16 +371,16 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         coeficienteDesc.setPlaceholder("Seleccione un Coeficiente");
         coeficienteDesc.setItems(formasDePagoService.getAllCoefiencientes());
         coeficienteDesc.setItemLabelGenerator(Coeficientes::getDescripcion);
-        coeficienteDesc.addValueChangeListener(e ->{
-            coeficiente.setValue(e.getValue().getCoeficiente());
-            cuotas.setValue((e.getValue().getCuotas());
+        coeficienteDesc.addBlurListener(e ->{
+            coeficiente.setValue(coeficienteDesc.getValue().getCoeficiente());
+            cuotas.setValue(String.valueOf(coeficienteDesc.getValue().getCuotas()));
         });
         coeficienteDesc.setWidth("25%");
         coeficiente = new BigDecimalField("Valor del Coeficiente");
-        coeficiente.setEnabled(false);
+        coeficiente.setReadOnly(true);
         coeficiente.setWidth("25%");
         cuotas = new TextField("Cuotas");
-        cuotas.setEnabled(false);
+        cuotas.setReadOnly(true);
         cuotas.setWidth("25%");   
         esDtoProntoPago = new Checkbox("Pronto Pago");
         esDtoProntoPago.addValueChangeListener(e -> {
@@ -486,6 +477,8 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         this.formasDePago = value;
         String topic = null;
         if (this.formasDePago != null) {
+            this.formasDePago.setCoeficiente(this.formasDePago.getIdCoeficiente().getCoeficiente());
+            this.formasDePago.setCuotas(this.formasDePago.getIdCoeficiente().getCuotas());
             topic = "formasDePago/" + this.formasDePago.getIdFormasPago();
             avatarGroup.getStyle().set("visibility", "visible");
         } else {
@@ -501,15 +494,17 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         int cuotas = Integer.parseInt(cuotasSim.getValue());
         BigDecimal monto = montoSim.getValue();
         BigDecimal coeficiente = valorSim.getValue();
-        BigDecimal cuota = monto.divide(new BigDecimal(cuotas), 2, RoundingMode.HALF_UP); // 2 decimales
-        BigDecimal cuotCoef = cuota.multiply(coeficiente).divide(new BigDecimal(100));
-        BigDecimal cuotaTotal = cuotCoef.add(cuota).setScale(2, RoundingMode.HALF_UP); // 2 decimales
+        BigDecimal cuota = monto.divide(new BigDecimal(cuotas), RoundingMode.HALF_UP);
+        BigDecimal cuotCoef = cuota.multiply(coeficiente);
+        BigDecimal cuotaTotal = cuotCoef.add(cuota);
         LocalDate fecha = LocalDate.now();
 
         for (int i = 1; i <= cuotas; i++) {
             Coeficientes coef = new Coeficientes();
             coef.setCuotas((short) i);
-            coef.setFecha(java.sql.Date.valueOf(fecha.plusMonths(i - 1)));
+            // Convert LocalDate to Date
+            Date fechaAsDate = Date.from(fecha.plusMonths(i - 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+            coef.setFecha(fechaAsDate);
             coef.setMonto(cuotaTotal);
             coeficientesList.add(coef);
         }

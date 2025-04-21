@@ -1,14 +1,25 @@
 package com.ideadistribuidora.visus.data;
 
-import com.ideadistribuidora.visus.data.enums.ClasificacionEnum;
-
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.ColumnTransformer;
+
+import com.ideadistribuidora.visus.data.enums.ClasificacionEnum;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "porcentuales")
@@ -35,6 +46,9 @@ public class Porcentuales {
     @NotNull
     @ColumnTransformer(read = "clasificacion:: text", write = "?::tporcentual")
     private ClasificacionEnum clasificacion;
+
+     @OneToMany(mappedBy = "porcentual", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ListasPorcentuales> listasPorcentuales = new ArrayList<>();
 
     // Getters and setters
 
@@ -85,4 +99,14 @@ public class Porcentuales {
     public void setClasificacion(ClasificacionEnum clasificacion) {
         this.clasificacion = clasificacion;
     }
+
+    public List<ListasPorcentuales> getListasPorcentuales() {
+        return listasPorcentuales;
+    }
+
+    public void setListasPorcentuales(List<ListasPorcentuales> listasPorcentuales) {
+        this.listasPorcentuales = listasPorcentuales;
+    }
+
+    
 }

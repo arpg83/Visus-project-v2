@@ -37,12 +37,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Bancos")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 14)
-@Route(value = "15/:bancosID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 15)
+@Route(value = "16/:bancosID?/:action?(edit)")
 public class BancosView extends Div implements BeforeEnterObserver {
 
         private final String BANCOS_ID = "bancosID";
-        private final String BANCOS_EDIT_ROUTE_TEMPLATE = "15/%s/edit";
+        private final String BANCOS_EDIT_ROUTE_TEMPLATE = "16/%s/edit";
 
         private final Grid<Bancos> grid = new Grid<>(Bancos.class, false);
 

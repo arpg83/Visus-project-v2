@@ -42,12 +42,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Comisiones")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 3)
-@Route(value = "4/:comisionesID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 4)
+@Route(value = "5/:comisionesID?/:action?(edit)")
 public class ComisionesView extends Div implements BeforeEnterObserver {
 
     private final String COMISIONES_ID = "comisionesID";
-    private final String COMISIONES_EDIT_ROUTE_TEMPLATE = "4/%s/edit";
+    private final String COMISIONES_EDIT_ROUTE_TEMPLATE = "5/%s/edit";
 
     private final Grid<Comisiones> grid = new Grid<>(Comisiones.class, false);
 
@@ -280,8 +280,6 @@ public class ComisionesView extends Div implements BeforeEnterObserver {
         tipoComision.setPlaceholder("Seleccione Tipo de Comisión");
         tipoComision.setItems(TipoComisionEnum.values());
         tipoComision.setItemLabelGenerator(TipoComisionEnum::getDisplayTipoComision);
-        tipoComision.setRequired(true);
-        tipoComision.setRequiredIndicatorVisible(true);
         fechaModificacion = new DateTimePicker("Fecha de Modificación");
         fechaModificacion.setDatePickerI18n(ComponentUtils.getI18n());
         vigenciaDesde = new DateTimePicker("Vigencia Desde");

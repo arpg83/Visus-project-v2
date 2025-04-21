@@ -60,12 +60,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Proveedores")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 1)
-@Route(value = "2/:proveedoresID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 2)
+@Route(value = "3/:proveedoresID?/:action?(edit)")
 public class ProveedoresView extends Div implements BeforeEnterObserver {
 
         private final String PROVEEDORES_ID = "proveedoresID";
-        private final String PROVEEDORES_EDIT_ROUTE_TEMPLATE = "2/%s/edit";
+        private final String PROVEEDORES_EDIT_ROUTE_TEMPLATE = "3/%s/edit";
 
         private final Grid<Proveedores> grid = new Grid<>(Proveedores.class, false);
         private final Grid<Domicilios> gridDomicilios = new Grid<>(Domicilios.class, false);
@@ -246,6 +246,11 @@ public class ProveedoresView extends Div implements BeforeEnterObserver {
                                 .bind("nombreReal");
                 binder.forField(situacionFiscal).asRequired("Situación Fiscal Requerido")
                                 .bind("situacionFiscal");
+                binder.forField(telefono1).bind("telefono1");
+                binder.forField(telefono2).bind("telefono2");
+                binder.forField(telefono3).bind("telefono3");
+                binder.forField(email).bind("email");
+
                 binder.addStatusChangeListener(
                                 event -> save.setEnabled(binder.isValid()));
 
@@ -261,23 +266,33 @@ public class ProveedoresView extends Div implements BeforeEnterObserver {
                                 if (this.proveedores == null) {
                                         this.proveedores = new Proveedores();
                                 }
-                                if (this.domList.size() > 0 && domChanges) {
-                                        if (this.proveedores.getDomicilios() != null) {
-                                                this.proveedores.getDomicilios().clear();
-                                        }
-                                        proveedoresService.saveDomList(this.domList);
-                                        this.proveedores.setDomicilios(this.domList);
-                                }
 
-                                if (this.bancosList.size() > 0 && bancoChanges) {
-                                        this.proveedores.setProveedoresBancos(bancosList);
+                                Optional<Proveedores> obj = proveedoresService.findByIdDocumentoAndNumero(this.proveedores.getIdDocumento(),this.proveedores.getNumero());
+                                if(obj.isPresent() && this.proveedores.getIdProveedor()!=obj.get().getIdProveedor()){
+                                        Notification n = Notification.show(
+                                                "El Cliente ya existe");
+                                n.setPosition(Position.MIDDLE);
+                                n.addThemeVariants(NotificationVariant.LUMO_WARNING);
+
+                                }else{
+                                        if (this.domList.size() > 0 && domChanges) {
+                                                if (this.proveedores.getDomicilios() != null) {
+                                                        this.proveedores.getDomicilios().clear();
+                                                }
+                                                proveedoresService.saveDomList(this.domList);
+                                                this.proveedores.setDomicilios(this.domList);
+                                        }
+
+                                        if (this.bancosList.size() > 0 && bancoChanges) {
+                                                this.proveedores.setProveedoresBancos(bancosList);
+                                        }
+                                        binder.writeBean(this.proveedores);
+                                        proveedoresService.update(this.proveedores);
+                                        clearForm();
+                                        refreshGrid();
+                                        Notification.show("Datos Guardados");
+                                        UI.getCurrent().navigate(ProveedoresView.class);
                                 }
-                                binder.writeBean(this.proveedores);
-                                proveedoresService.update(this.proveedores);
-                                clearForm();
-                                refreshGrid();
-                                Notification.show("Datos Guardados");
-                                UI.getCurrent().navigate(ProveedoresView.class);
                         } catch (ObjectOptimisticLockingFailureException exception) {
                                 Notification n = Notification.show(
                                                 "Error updating the data. Somebody else has updated the record while you were making changes.");

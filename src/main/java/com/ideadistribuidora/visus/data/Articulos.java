@@ -54,8 +54,6 @@ public class Articulos {
     @ManyToOne
     @JoinColumn(name = "idlinea", nullable = false)
     private Lineas idLinea;
-    @Transient
-    private Rubros rubros;
     @NotNull
     @ManyToOne
     @JoinColumn(name = "idmedida", nullable = false)
@@ -82,8 +80,6 @@ public class Articulos {
     @ManyToOne
     @JoinColumn(name = "idubicacion", nullable = false)
     private Ubicaciones idUbicacion;
-    @Transient
-    private Depositos deposito;
     @NotNull
     @Column(name = "fila")
     private int fila;
@@ -116,47 +112,16 @@ public class Articulos {
     private BigDecimal precioFinalSinIva;
     @Transient
     private BigDecimal precioFinalConIva;
+    @Transient
+    private BigDecimal nuevoMargenUtilidad;
+    @Transient
+    private BigDecimal incremento;
+    @Transient
+    private Depositos depositos;
+    @Transient 
+    private Rubros rubros;
 
     public Articulos() {
-    }
-
-    public Articulos(int idArticulo, String codigo_interno, String codigo_barra,
-            String descripcion, TipoArticuloEnum tipo, int stock, int stock_minimo,
-            int stock_maximo, Lineas idLinea, Medidas idMedida,
-            Presentaciones idPresentacion, Proveedores idProveedor, LocalDate fecha_compra,
-            LocalDate fecha_vencimiento, LocalDate fecha_baja, LocalDate fecha_actPrecios,
-            Ubicaciones idUbicacion, int fila, int columna,
-            BigDecimal precio_costo, BigDecimal margen_utilidad, Alicuotas idAlicuota,
-            boolean es_bonificado, BigDecimal bonificacion, EstadoArticuloEnum estado, String nroLote,
-            BigDecimal ganancia, BigDecimal precioFinalSinIva) {
-        this.idArticulo = idArticulo;
-        this.codigo_interno = codigo_interno;
-        this.codigo_barra = codigo_barra;
-        this.descripcion = descripcion;
-        this.tipo = tipo;
-        this.stock = stock;
-        this.stock_minimo = stock_minimo;
-        this.stock_maximo = stock_maximo;
-        this.idLinea = idLinea;
-        this.idMedida = idMedida;
-        this.idPresentacion = idPresentacion;
-        this.idProveedor = idProveedor;
-        this.fecha_compra = fecha_compra;
-        this.fecha_vencimiento = fecha_vencimiento;
-        this.fecha_baja = fecha_baja;
-        this.fecha_actPrecios = fecha_actPrecios;
-        this.idUbicacion = idUbicacion;
-        this.fila = fila;
-        this.columna = columna;
-        this.precio_costo = precio_costo;
-        this.margen_utilidad = margen_utilidad;
-        this.idAlicuota = idAlicuota;
-        this.es_bonificado = es_bonificado;
-        this.bonificacion = bonificacion;
-        this.estado = estado;
-        this.nroLote = nroLote;
-        this.ganancia = ganancia;
-        this.precioFinalSinIva = precioFinalSinIva;
     }
 
     public int getIdArticulo() {
@@ -351,28 +316,6 @@ public class Articulos {
         this.nroLote = nroLote;
     }
 
-    public Rubros getRubros() {
-        if (idLinea != null) {
-            return idLinea.getRubros();
-        }
-        return rubros;
-    }
-
-    public void setRubros(Rubros rubros) {
-        this.rubros = rubros;
-    }
-
-    public Depositos getDeposito() {
-        if (idUbicacion != null) {
-            return idUbicacion.getDepositos();
-        }
-        return deposito;
-    }
-
-    public void setDeposito(Depositos deposito) {
-        this.deposito = deposito;
-    }
-
     public BigDecimal getGanancia() {
         return ganancia;
     }
@@ -391,23 +334,7 @@ public class Articulos {
     }
 
     public BigDecimal getPrecioFinalConIva() {
-        if (precioFinalSinIva != null) {
-            if(isEs_bonificado()){
-                if(bonificacion != null && bonificacion.compareTo(BigDecimal.ZERO)>0){
-                    BigDecimal bonif = precioFinalSinIva.multiply(bonificacion).divide(BigDecimal.valueOf(100));
-                    precioFinalSinIva = precioFinalSinIva.subtract(bonif);
-                }
-            }
-            BigDecimal alic = idAlicuota.getDescripcion().contains("%")
-                    ? BigDecimal.valueOf(Double
-                            .parseDouble(idAlicuota.getDescripcion()
-                                    .replace("%", "")))
-                    : BigDecimal.ZERO;
-            BigDecimal resConIva = precioFinalSinIva.multiply(alic)
-                    .divide(BigDecimal.valueOf(100));
-            return precioFinalSinIva.add(resConIva);
-        }
-        return BigDecimal.ZERO;
+        return precioFinalConIva;
     }
 
     public void setPrecioFinalConIva(BigDecimal precioFinalConIva) {
@@ -429,5 +356,41 @@ public class Articulos {
     public void setCodigo_barra(String codigo_barra) {
         this.codigo_barra = codigo_barra;
     }
+
+    public BigDecimal getNuevoMargenUtilidad() {
+        return nuevoMargenUtilidad;
+    }
+
+    public void setNuevoMargenUtilidad(BigDecimal nuevoMargenUtilidad) {
+        this.nuevoMargenUtilidad = nuevoMargenUtilidad;
+    }
+
+    public BigDecimal getIncremento() {
+        return incremento;
+    }
+
+    public void setIncremento(BigDecimal incremento) {
+        this.incremento = incremento;
+    }
+
+    public Depositos getDepositos() {
+        return depositos;
+    }
+
+    public void setDepositos(Depositos depositos) {
+        this.depositos = depositos;
+    }
+
+    public Rubros getRubros() {
+        return rubros;
+    }
+
+    public void setRubros(Rubros rubros) {
+        this.rubros = rubros;
+    }
+
+    
+
+    
 
 }

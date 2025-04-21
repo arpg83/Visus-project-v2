@@ -37,12 +37,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Rubros")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 7)
-@Route(value = "8/:rubrosID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 8)
+@Route(value = "9/:rubrosID?/:action?(edit)")
 public class RubrosView extends Div implements BeforeEnterObserver {
 
     private final String RUBROS_ID = "rubrosID";
-    private final String RUBROS_EDIT_ROUTE_TEMPLATE = "8/%s/edit";
+    private final String RUBROS_EDIT_ROUTE_TEMPLATE = "9/%s/edit";
 
     private final Grid<Rubros> grid = new Grid<>(Rubros.class, false);
 

@@ -7,11 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.ideadistribuidora.visus.data.Comisiones;
 import com.ideadistribuidora.visus.data.Vendedores;
 import com.ideadistribuidora.visus.data.Zonas;
 
+@Repository
 public interface VendedoresRepository extends JpaRepository<Vendedores, Integer>, JpaSpecificationExecutor<Vendedores> {
     Optional<Vendedores> findByIdDocumentoAndNumeroDeDocumento(int idDocumento, Long numeroDeDocumento);
     

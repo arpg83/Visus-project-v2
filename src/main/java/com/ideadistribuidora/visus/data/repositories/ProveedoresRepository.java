@@ -1,16 +1,19 @@
 package com.ideadistribuidora.visus.data.repositories;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.ideadistribuidora.visus.data.Domicilios;
 import com.ideadistribuidora.visus.data.Proveedores;
 import com.ideadistribuidora.visus.data.ProveedoresBancos;
 
+@Repository
 public interface ProveedoresRepository
         extends JpaRepository<Proveedores, Integer>, JpaSpecificationExecutor<Proveedores> {
 
@@ -19,5 +22,7 @@ public interface ProveedoresRepository
 
     @Query("SELECT p.proveedoresBancos FROM Proveedores p WHERE p.idProveedor = :idProveedor")
     Set<ProveedoresBancos> findBancosByIdProveedor(@Param("idProveedor") int idProveedor);
+
+    Optional<Proveedores> findByIdDocumentoAndNumero(int idDocumento, Long numero);
 
 }

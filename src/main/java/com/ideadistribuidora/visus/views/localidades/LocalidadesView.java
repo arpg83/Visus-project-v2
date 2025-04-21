@@ -43,12 +43,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Localidades")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 23)
-@Route(value = "24/:localidadesID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 24)
+@Route(value = "25/:localidadesID?/:action?(edit)")
 public class LocalidadesView extends Div implements BeforeEnterObserver {
 
     private final String LOCALIDADES_ID = "localidadesID";
-    private final String LOCALIDADES_EDIT_ROUTE_TEMPLATE = "24/%s/edit";
+    private final String LOCALIDADES_EDIT_ROUTE_TEMPLATE = "25/%s/edit";
 
     private final Grid<Localidades> grid = new Grid<>(Localidades.class, false);
 
@@ -156,8 +156,8 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
             // save.setEnabled(false);
         });
 
-        provincias.addValueChangeListener(event -> {
-            Provincias selectedProvicias = event.getValue();
+        provincias.addBlurListener(event -> {
+            Provincias selectedProvicias = provincias.getValue();
             if (selectedProvicias != null) {
                 departamentos.setItems(localidadesService.findDptoByProvincias(selectedProvicias));
             } else {
@@ -373,6 +373,7 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
         if (this.localidades != null) {
             topic = "localidades/" + this.localidades.getIdLocalidad();
             avatarGroup.getStyle().set("visibility", "visible");
+            this.localidades.setProvincias(this.localidades.getDepartamentos().getProvincias());
         } else {
             avatarGroup.getStyle().set("visibility", "hidden");
         }

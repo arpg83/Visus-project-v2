@@ -40,12 +40,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Ubicaciones")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 10)
-@Route(value = "11/:ubicacionesID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 11)
+@Route(value = "12/:ubicacionesID?/:action?(edit)")
 public class UbicacionesView extends Div implements BeforeEnterObserver {
 
     private final String UBICACIONES_ID = "ubicacionesID";
-    private final String UBICACIONES_EDIT_ROUTE_TEMPLATE = "11/%s/edit";
+    private final String UBICACIONES_EDIT_ROUTE_TEMPLATE = "12/%s/edit";
 
     private final Grid<Ubicaciones> grid = new Grid<>(Ubicaciones.class, false);
 
@@ -129,7 +129,7 @@ public class UbicacionesView extends Div implements BeforeEnterObserver {
                 depositos -> String.valueOf(depositos.getIdDeposito()),
                 id -> ubicacionesService
                         .findById(Integer.parseInt(id)));
-        binder.bind(depositos, "depositos");
+        binder.forField(depositos).asRequired("Depósito es Requerido").bind("depositos");
         binder.forField(fila).asRequired("Fila es Requerido")
                 .bind("fila");
         binder.forField(columna).asRequired("Columna es Requerido")
@@ -284,8 +284,6 @@ public class UbicacionesView extends Div implements BeforeEnterObserver {
         depositos.setPlaceholder("Seleccione Depósito");
         depositos.setItems(ubicacionesService.getAllDepositos());
         depositos.setItemLabelGenerator(Depositos::getDescripcion);
-        depositos.setRequired(true);
-        depositos.setRequiredIndicatorVisible(true);
         fila = new IntegerField("Fila");
         fila.setMin(1);
         fila.setTooltipText("El número debe ser mayor que cero");

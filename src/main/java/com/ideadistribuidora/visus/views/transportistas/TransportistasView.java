@@ -57,12 +57,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Transportistas")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 5)
-@Route(value = "6/:transportistasID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 6)
+@Route(value = "7/:transportistasID?/:action?(edit)")
 public class TransportistasView extends Div implements BeforeEnterObserver {
 
         private final String TRANSPORTISTAS_ID = "transportistasID";
-        private final String TRANSPORTISTAS_EDIT_ROUTE_TEMPLATE = "6/%s/edit";
+        private final String TRANSPORTISTAS_EDIT_ROUTE_TEMPLATE = "7/%s/edit";
 
         private final Grid<Transportistas> grid = new Grid<>(Transportistas.class, false);
         private final Grid<TransportistasBancos> gridBancos = new Grid<>(TransportistasBancos.class, false);
@@ -227,6 +227,7 @@ public class TransportistasView extends Div implements BeforeEnterObserver {
                         localidades -> String.valueOf(localidades.getIdLocalidad()),
                         idLocalidad -> transportistasService
                         .findLocalidadesById(Integer.parseInt(idLocalidad)));
+                binder.forField(localidades).asRequired("Localidades es Requerido").bind("localidades");
                 binder.forField(depto).bind("depto");
                 binder.forField(casa).bind("casa");
                 binder.forField(calle).asRequired("Calle es Requerido").bind("calle");
@@ -258,7 +259,7 @@ public class TransportistasView extends Div implements BeforeEnterObserver {
                                                 .getTransportistaByIdDocumentoAndNumero(this.transportistas.getIdDocumento(),
                                                                 this.transportistas.getNumeroDocumento());
                                 if (transportistaExist.isPresent() && transportistaExist.get().getIdTransportista() != this.transportistas.getIdTransportista()) {
-                                        Notification notification = Notification.show("Ya existe un Vendedor con el mismo Tipo de Documento y Número");
+                                        Notification notification = Notification.show("Ya existe un Transportista con el mismo Tipo de Documento y Número");
                                         notification.setPosition(Position.MIDDLE);
                                         notification.getElement().getStyle().set("color", "red");
                                 }else{
@@ -432,8 +433,6 @@ public class TransportistasView extends Div implements BeforeEnterObserver {
                 localidades = new ComboBox<>("Localidad");
                 localidades.setPlaceholder("Seleccione Localidad");
                 localidades.setItems(transportistasService.getAllLocalidades());
-                localidades.setItemLabelGenerator(Localidades::getNombre);
-                localidades.setRequiredIndicatorVisible(true);
                 localidades.addBlurListener(event -> {
                         if (localidades.isEmpty()) {
                                 localidades.setErrorMessage("Localidad es Requerido");

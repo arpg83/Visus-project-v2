@@ -108,7 +108,7 @@ public class ComponentUtils {
                 "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"));
         españolI18n.setWeekdays(
                 List.of("Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"));
-        españolI18n.setWeekdaysShort(List.of("Dom", "Lun", "Mar", "Mier", "Jue", "Vie", "Sab"));
+        españolI18n.setWeekdaysShort(List.of("Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"));
         españolI18n.setCancel("Cancelar");
         españolI18n.setToday("Hoy");
         return españolI18n;
@@ -119,7 +119,7 @@ public class ComponentUtils {
 
         // Redondear el valor al número de decimales especificado
         if (valor != null) {
-            BigDecimal valorRedondeado = valor.setScale(2, RoundingMode.HALF_UP);
+            BigDecimal valorRedondeado = valor.setScale(4, RoundingMode.HALF_UP);
             // Establecer el valor redondeado de vuelta en el BigDecimalField
             field.setValue(valorRedondeado);
         }

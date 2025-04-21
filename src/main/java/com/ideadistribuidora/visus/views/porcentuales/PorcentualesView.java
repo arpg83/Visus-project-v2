@@ -42,12 +42,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @PageTitle("Porcentuales")
-@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 16)
-@Route(value = "17/:porcentualesID?/:action?(edit)")
+@Menu(icon = "line-awesome/svg/columns-solid.svg", order = 17)
+@Route(value = "18/:porcentualesID?/:action?(edit)")
 public class PorcentualesView extends Div implements BeforeEnterObserver {
 
     private final String PORCENTUALES_ID = "porcentualesID";
-    private final String PORCENTUALES_EDIT_ROUTE_TEMPLATE = "17/%s/edit";
+    private final String PORCENTUALES_EDIT_ROUTE_TEMPLATE = "18/%s/edit";
 
     private final Grid<Porcentuales> grid = new Grid<>(Porcentuales.class, false);
 
