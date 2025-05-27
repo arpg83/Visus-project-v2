@@ -13,13 +13,11 @@ public class PedidosItems {
     @Column(name = "iditem", nullable = false)
     private int idItem;
 
-    @NotNull
-    @ManyToOne
+    @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn(name = "idpedido", nullable = false)
     private Pedidos idPedido;
 
-    @NotNull
-    @ManyToOne
+    @ManyToOne (fetch = FetchType.EAGER)
     @JoinColumn(name = "idarticulo", nullable = false)
     private Articulos idArticulo;
 
@@ -42,6 +40,9 @@ public class PedidosItems {
 
     @Column(name = "recargo")
     private BigDecimal recargo;
+
+    @Transient
+    private boolean persistBonArt;
 
     // Getters and Setters
     public int getIdItem() {
@@ -114,5 +115,13 @@ public class PedidosItems {
 
     public void setRecargo(BigDecimal recargo) {
         this.recargo = recargo;
+    }
+
+    public boolean isPersistBonArt() {
+        return persistBonArt;
+    } 
+    
+    public void setPersistBonArt(boolean persistBonArt) {
+        this.persistBonArt = persistBonArt;
     }
 }

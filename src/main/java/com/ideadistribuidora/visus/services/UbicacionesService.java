@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import com.ideadistribuidora.visus.data.Departamentos;
 import com.ideadistribuidora.visus.data.Depositos;
 import com.ideadistribuidora.visus.data.Ubicaciones;
 import com.ideadistribuidora.visus.data.repositories.DepositosRepository;

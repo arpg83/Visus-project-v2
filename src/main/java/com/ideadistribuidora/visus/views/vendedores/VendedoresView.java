@@ -93,8 +93,6 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
         private TextField lote;
         private TextField barrio;
         private GridListDataView<Vendedores> vendedoresDataView;
-        private GridListDataView<Vendedores> zonasDataView;
-        private GridListDataView<Vendedores> comisionesDataView;
         private Button refreshZonasButton; 
         private Button addZonasButton; 
         private Button editZonasButton;
@@ -103,7 +101,6 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
         private Button deleteComisionesButton;
         private Button editComisionesButton;
         private Button refreshComisionesButton;
-        private boolean vendSelected = false;
 
         private final Button cancel = new Button("Cancelar");
         private final Button save = new Button("Grabar");
@@ -112,8 +109,6 @@ public class VendedoresView extends Div implements BeforeEnterObserver {
         private final CollaborationBinder<Vendedores> binder;
 
         private Vendedores vendedores;
-        private Zonas zonas;
-        private Comisiones comisiones;
 
         private Set<Zonas> zonaList = new HashSet<>();
         private Set<Comisiones> comisionesList = new HashSet<>();

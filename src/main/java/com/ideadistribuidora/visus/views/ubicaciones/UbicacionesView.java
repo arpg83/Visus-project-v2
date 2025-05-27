@@ -17,6 +17,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -96,8 +97,8 @@ public class UbicacionesView extends Div implements BeforeEnterObserver {
         grid.addColumn(Ubicaciones::getNumero).setHeader("Número").setAutoWidth(true);
         grid.addColumn(ubicaciones -> ubicaciones.getDepositos().getDescripcion()).setHeader("Depósito")
                 .setAutoWidth(true);
-        grid.addColumn(Ubicaciones::getFila).setHeader("Fila").setAutoWidth(true);
-        grid.addColumn(Ubicaciones::getColumna).setHeader("Columna").setAutoWidth(true);
+        grid.addColumn(Ubicaciones::getFila).setHeader("Fila").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);;
+        grid.addColumn(Ubicaciones::getColumna).setHeader("Columna").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);;
         dataView = grid.setItems(ubicacionesService.ubicacionesList());
         searchFilter(dataView);
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);

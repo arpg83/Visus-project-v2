@@ -3,5 +3,6 @@
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "automatic",
     "typescript.preferences.includePackageJsonAutoImports": "on",
-    "java.debug.settings.hotCodeReplace": "auto"
+    "java.debug.settings.hotCodeReplace": "auto",
+    "java.jdt.ls.vmargs": "-Xms2048m -Xmx8192m"
 }

@@ -1,5 +1,6 @@
 package com.ideadistribuidora.visus.views.listasPorcentajes;
 
+import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
@@ -90,7 +92,7 @@ public class ListasPorcentualesView extends Div implements BeforeEnterObserver {
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addColumn(listasPorcentuales ->listasPorcentuales.getLista().getDescripcion()).setHeader("Lista").setSortable(true).setAutoWidth(true);
         grid.addColumn(listasPorcentuales ->listasPorcentuales.getPorcentual().getDescripcion()).setHeader("Porcentual").setSortable(true).setAutoWidth(true);
-        grid.addColumn(listasPorcentuales ->listasPorcentuales.getPorcentual().getPorcentual()).setHeader("%").setSortable(true).setAutoWidth(true);
+        grid.addColumn(listasPorcentuales ->listasPorcentuales.getPorcentual().getPorcentual().setScale(2,RoundingMode.HALF_UP)).setHeader("%").setSortable(true).setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
         grid.addColumn(listasPorcentuales ->listasPorcentuales.getPorcentual().getInicioVigencia()).setHeader("Inicio Vigencia").setSortable(true).setAutoWidth(true);
         grid.addColumn(listasPorcentuales ->listasPorcentuales.getPorcentual().getFinVigencia()).setHeader("Fin Vigencia").setSortable(true).setAutoWidth(true);
         grid.addColumn(listasPorcentuales ->listasPorcentuales.getPorcentual().getClasificacion()).setHeader("Clasificación").setSortable(true).setAutoWidth(true);

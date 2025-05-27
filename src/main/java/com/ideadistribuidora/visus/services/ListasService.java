@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ideadistribuidora.visus.data.Listas;
 import com.ideadistribuidora.visus.data.repositories.ListasRepository;
-import com.ideadistribuidora.visus.data.repositories.PorcentualesRepository;
 
 @Service
 public class ListasService {
@@ -17,8 +16,8 @@ public class ListasService {
     @Autowired
     private ListasRepository listasRepository;
 
-    @Autowired
-    private PorcentualesRepository porcentualesRepository;
+    // @Autowired
+    // private PorcentualesRepository porcentualesRepository;
 
     public List<Listas> findAll() {
         return listasRepository.findAll();

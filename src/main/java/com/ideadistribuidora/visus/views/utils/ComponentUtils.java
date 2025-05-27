@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
+import com.ideadistribuidora.visus.data.Alicuotas;
+import com.ideadistribuidora.visus.data.PedidosItems;
 import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.BigDecimalField;
@@ -134,5 +136,50 @@ public class ComponentUtils {
         }
         return precioFinalConIva;
     }
+
+    public static void setDecimalsOFields(BigDecimalField field, int number) {
+        field.setValue(BigDecimal.ZERO.setScale(number, RoundingMode.HALF_UP));
+        field.addValueChangeListener(e -> {
+            if (field.getValue() != null) {
+                BigDecimal value = field.getValue().setScale(number, RoundingMode.HALF_UP);
+                field.setValue(value);
+            }
+        });
+    }
+
+    public static BigDecimal calcSubTotalConImp(PedidosItems pedidosItems2) {
+        BigDecimal precioUnitario = pedidosItems2.getPrecioArticulo();
+        BigDecimal cantidad = pedidosItems2.getCantidad();
+        BigDecimal bonificacion = pedidosItems2.getBonificacion() != null ? pedidosItems2.getBonificacion()
+                : BigDecimal.ZERO;
+        BigDecimal recargo = pedidosItems2.getRecargo() != null ? pedidosItems2.getRecargo() : BigDecimal.ZERO;
+        // BigDecimal precioSInImp = calcSubTotalSinImp(pedidosItems2).divide(cantidad);
+        BigDecimal alic = BigDecimal.ZERO;
+        Alicuotas alicuotas = pedidosItems2.getIdArticulo().getIdAlicuota();
+        alic = alicuotas.getDescripcion().contains("%")
+                ? BigDecimal.valueOf(Double
+                        .parseDouble(alicuotas.getDescripcion().replace("%",
+                                "")))
+                : BigDecimal.ZERO;
+        BigDecimal precBonRec = precioUnitario
+                .subtract(precioUnitario.multiply(bonificacion).divide(BigDecimal.valueOf(100)))
+                .add(precioUnitario.multiply(recargo).divide(BigDecimal.valueOf(100)));
+        BigDecimal subtotalConImpuesto = precBonRec.add(precBonRec.multiply(alic).divide(BigDecimal.valueOf(100)))
+                .multiply(cantidad);
+        return subtotalConImpuesto.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public static BigDecimal calcSubTotalSinImp(PedidosItems pedItem) {
+        BigDecimal precioUnitario = pedItem.getPrecioArticulo();
+        BigDecimal cantidad = pedItem.getCantidad();
+        BigDecimal bonificacion = pedItem.getBonificacion() != null ? pedItem.getBonificacion() : BigDecimal.ZERO;
+        BigDecimal recargo = pedItem.getRecargo() != null ? pedItem.getRecargo() : BigDecimal.ZERO;
+        BigDecimal subtotalSinImpuesto = precioUnitario
+                .subtract(precioUnitario.multiply(bonificacion).divide(BigDecimal.valueOf(100)))
+                .add(precioUnitario.multiply(recargo).divide(BigDecimal.valueOf(100)))
+                .multiply(cantidad);
+        return subtotalSinImpuesto.setScale(2, RoundingMode.HALF_UP);
+    }
+
 
 }

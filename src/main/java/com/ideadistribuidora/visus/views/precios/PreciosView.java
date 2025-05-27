@@ -1,7 +1,6 @@
 package com.ideadistribuidora.visus.views.precios;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,7 @@ import com.ideadistribuidora.visus.data.Lineas;
 import com.ideadistribuidora.visus.data.Proveedores;
 import com.ideadistribuidora.visus.data.Rubros;
 import com.ideadistribuidora.visus.services.ArticulosService;
-import com.ideadistribuidora.visus.views.articulos.ArticulosView;
+import com.ideadistribuidora.visus.views.utils.ComponentUtils;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.UserInfo;
@@ -126,7 +125,9 @@ public class PreciosView extends Div {
         thirdItemLayout.setEnabled(false);
         thirdItemLayout.getStyle().set("border-bottom", "1px solid black");
         actualField = new BigDecimalField("Actual");
+        ComponentUtils.setDecimalsOFields(actualField, 2);
         nuevoField = new BigDecimalField("Nuevo");
+        ComponentUtils.setDecimalsOFields(nuevoField, 2);
         thirdItemLayout.add(actualField, nuevoField);
         verticalLayout.add(thirdItemLayout);
 
@@ -136,6 +137,7 @@ public class PreciosView extends Div {
         fourthItemLayout.setWidth(100, Unit.PERCENTAGE);
         fourthItemLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
         incrementoField = new BigDecimalField("Incremento(%)");
+        ComponentUtils.setDecimalsOFields(incrementoField, 2);
         fourthItemLayout.add(incrementoField);
         verticalLayout.add(fourthItemLayout);
 

@@ -73,7 +73,6 @@ public class LocalidadesView extends Div implements BeforeEnterObserver {
     private List<Departamentos> departamentosList = new ArrayList<>();
     private GridListDataView<Localidades> dataView;
     private List<Provincias> provinciaList = new ArrayList<>();
-    private Provincias provinciaValue = null;
 
     public LocalidadesView(LocalidadesService localidadesService) {
         this.localidadesService = localidadesService;

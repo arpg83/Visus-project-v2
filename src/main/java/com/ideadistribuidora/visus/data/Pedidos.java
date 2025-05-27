@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import org.hibernate.annotations.ColumnTransformer;
+
 @Entity
 @Table(name = "pedidos")
 public class Pedidos {
@@ -50,17 +52,17 @@ public class Pedidos {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado_pedido", nullable = false)
+    @ColumnTransformer(read = "estado_pedido:: text", write = "?::epedido")
     private EstadoPedidoEnum estadoPedido;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado_pago", nullable = false)
+    @ColumnTransformer(read = "estado_pago:: text", write = "?::epago")
     private EstadoPagoEnum estadoPago;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "plataforma", nullable = false)
+    @ColumnTransformer(read = "plataforma:: text", write = "?::plataforma")
     private PlataformaEnum plataforma;
 
     @Column(name = "nota_al_pie")
@@ -75,12 +77,7 @@ public class Pedidos {
     private String domicilioClienteString;
 
     @Transient
-    @NotNull
-    private Domicilios domicilioCliente;
-
-    @Transient
-    @NotNull
-    private String estadoPedidoString;
+    private Domicilios domicilios;
 
     // Getters and Setters
     public int getIdPedido() {
@@ -203,14 +200,6 @@ public class Pedidos {
         this.idVendedor = idVendedor;
     }
 
-    public String getEstadoPedidoString() {
-        return estadoPedidoString;
-    }
-
-    public void setEstadoPedidoString(String estadoPedidoString) {
-        this.estadoPedidoString = estadoPedidoString;
-    }
-
     public String getDomicilioClienteString() {
         return domicilioClienteString;
     }
@@ -218,14 +207,12 @@ public class Pedidos {
     public void setDomicilioClienteString(String domicilioClienteString) {
         this.domicilioClienteString = domicilioClienteString;
     }
-
-    public Domicilios getDomicilioCliente() {
-        return domicilioCliente;
+    
+    public Domicilios getDomicilios() {
+        return domicilios;
     }
 
-    public void setDomicilioCliente(Domicilios domicilioCliente) {
-        this.domicilioCliente = domicilioCliente;
+    public void setDomicilios(Domicilios domicilios) {
+        this.domicilios = domicilios;
     }
-    
-    
 }

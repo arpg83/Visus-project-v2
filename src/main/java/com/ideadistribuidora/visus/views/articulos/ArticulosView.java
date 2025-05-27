@@ -10,7 +10,6 @@ import org.springframework.orm.jpa.JpaSystemException;
 
 import com.ideadistribuidora.visus.data.Alicuotas;
 import com.ideadistribuidora.visus.data.Articulos;
-import com.ideadistribuidora.visus.data.Clientes;
 import com.ideadistribuidora.visus.data.Depositos;
 import com.ideadistribuidora.visus.data.Lineas;
 import com.ideadistribuidora.visus.data.Medidas;
@@ -21,7 +20,6 @@ import com.ideadistribuidora.visus.data.Ubicaciones;
 import com.ideadistribuidora.visus.data.enums.EstadoArticuloEnum;
 import com.ideadistribuidora.visus.data.enums.TipoArticuloEnum;
 import com.ideadistribuidora.visus.services.ArticulosService;
-import com.ideadistribuidora.visus.views.clientes.ClientesView;
 import com.ideadistribuidora.visus.views.utils.ComponentUtils;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
@@ -33,6 +31,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -153,11 +152,11 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                                 .setHeader("Descripción").setAutoWidth(true);
                 grid.addColumn("tipo")
                                 .setHeader("Tipo").setAutoWidth(true);
-                grid.addColumn("stock").setAutoWidth(true);
+                grid.addColumn("stock").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);;
                 grid.addColumn("stock_minimo").setHeader("Stock Min.")
-                                .setAutoWidth(true);
+                                .setAutoWidth(true).setTextAlign(ColumnTextAlign.END);;
                 grid.addColumn("stock_maximo").setHeader("Stock Máx.")
-                                .setAutoWidth(true);
+                                .setAutoWidth(true).setTextAlign(ColumnTextAlign.END);;
                 grid.addComponentColumn(articulos -> {
                         Checkbox checkbox = new Checkbox();
                         checkbox.setValue(articulos.isEs_bonificado());
@@ -166,10 +165,10 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 }).setHeader("Bonificado")
                                 .setAutoWidth(true);
                 grid.addColumn(articulos -> articulos.getBonificacion() == null ? 0
-                                : articulos.getBonificacion().setScale(4, RoundingMode.HALF_UP)).setHeader("Bonif.(%)")
-                                .setAutoWidth(true);
-                grid.addColumn(articulos -> calcularPrecioFinal(articulos).getPrecioFinalConIva().setScale(4,
-                                RoundingMode.HALF_UP)).setHeader("Precio Final").setAutoWidth(true);
+                                : articulos.getBonificacion().setScale(2, RoundingMode.HALF_UP)).setHeader("Bonif.(%)")
+                                .setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
+                grid.addColumn(articulos -> calcularPrecioFinal(articulos).getPrecioFinalConIva().setScale(2,
+                                RoundingMode.HALF_UP)).setHeader("Precio Final").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
                 grid.addColumn(articulos -> articulos.getEstado().getDisplayEstadoArticulo()).setHeader("Estado")
                                 .setAutoWidth(true);
 
@@ -503,8 +502,8 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 stockMinimo = new IntegerField("Stock Minimo");
                 stockMaximo = new IntegerField("Stock Maximo");
                 precioCosto = new BigDecimalField("Precio Costo");
+                ComponentUtils.setDecimalsOFields(precioCosto, 2);
                 precioCosto.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
-                precioCosto.setValue(BigDecimal.ZERO);
                 precioCosto.addBlurListener(e -> {
                         ComponentUtils.getRoundedValue(precioCosto);
                         BigDecimal precCost = precioCosto.getValue();
@@ -529,7 +528,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 margenUtilidad = new BigDecimalField("Margen/Utilidad");
                 margenUtilidad.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
                 margenUtilidad.setSuffixComponent(new Span("%"));
-                margenUtilidad.setValue(BigDecimal.ZERO);
+                ComponentUtils.setDecimalsOFields(margenUtilidad, 2);
                 margenUtilidad.addBlurListener(e -> {
                         ComponentUtils.getRoundedValue(margenUtilidad);
                         BigDecimal precCost = precioCosto.getValue();
@@ -554,12 +553,13 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 ganancia = new BigDecimalField("Ganancia");
                 ganancia.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
                 ganancia.setReadOnly(true);
+                ComponentUtils.setDecimalsOFields(ganancia, 2);
                 // ganancia.setValue(gananciaValue);
                 precioFinalSinIva = new BigDecimalField("Precio Final Sin IVA");
                 precioFinalSinIva.getStyle().setWidth("33%");
                 precioFinalSinIva.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
                 precioFinalSinIva.setReadOnly(true);
-                ComponentUtils.getRoundedValue(precioFinalSinIva);
+                ComponentUtils.setDecimalsOFields(precioFinalSinIva,2);
                 alicuota = new ComboBox<>("Alicuota");
                 alicuota.setPlaceholder("Seleccione Alicuota");
                 alicuota.setItems(articulosService.getAllAlicuotas());
@@ -639,6 +639,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 bonificacion.getStyle().setWidth("100%");
                 bonificacion.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
                 bonificacion.setEnabled(false);
+                ComponentUtils.setDecimalsOFields(bonificacion, 2);
                 bonificacion.addBlurListener(e -> {
                         ComponentUtils.getRoundedValue(bonificacion);
                         BigDecimal precFinSinIva = precioFinalSinIva.getValue();
@@ -678,10 +679,7 @@ public class ArticulosView extends Div implements BeforeEnterObserver {
                 precioFinalConIva.getStyle().setWidth("32%");
                 precioFinalConIva.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
                 precioFinalConIva.setReadOnly(true);
-                precioFinalConIva.setValue(BigDecimal.ZERO);
-                precioFinalConIva.addValueChangeListener(e -> {
-                        ComponentUtils.getRoundedValue(precioFinalConIva);
-                });
+                ComponentUtils.setDecimalsOFields(precioFinalConIva, 2);
                 estado = new ComboBox<>("Estado del Articulo");
                 estado.setPlaceholder("Seleccione Estado del Articulo");
                 estado.setItems(EstadoArticuloEnum.values());

@@ -8,6 +8,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import com.ideadistribuidora.visus.data.Coeficientes;
 import com.ideadistribuidora.visus.services.CoeficientesService;
+import com.ideadistribuidora.visus.views.utils.ComponentUtils;
 import com.ideadistribuidora.visus.views.utils.StringToShortConverter;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
@@ -16,6 +17,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -92,8 +94,8 @@ public class CoeficientesView extends Div implements BeforeEnterObserver {
 
         // Configure Grid
         grid.addColumn(createCoeficientesRenderer()).setHeader("Descripción").setAutoWidth(true);
-        grid.addColumn(Coeficientes::getCoeficiente).setHeader("Coficiente (%)").setAutoWidth(true);
-        grid.addColumn(Coeficientes::getCuotas).setHeader("Cuotas").setAutoWidth(true);
+        grid.addColumn(Coeficientes::getCoeficiente).setHeader("Coficiente (%)").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
+        grid.addColumn(Coeficientes::getCuotas).setHeader("Cuotas").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
         dataView = grid.setItems(coeficientesService.coeList());
         searchFilter(dataView);
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
@@ -271,7 +273,9 @@ public class CoeficientesView extends Div implements BeforeEnterObserver {
         descripcion = new TextField("Descripción");
         descripcion.setMaxLength(50);
         coeficiente = new BigDecimalField("Coeficiente");
+        ComponentUtils.setDecimalsOFields(coeficiente, 2);
         cuotas = new TextField("Cuotas");
+        cuotas.setValue("0");
         
         formLayout.add(descripcion, coeficiente, cuotas);
 

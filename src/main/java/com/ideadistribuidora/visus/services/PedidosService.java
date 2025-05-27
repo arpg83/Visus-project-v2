@@ -1,7 +1,6 @@
 package com.ideadistribuidora.visus.services;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,17 +12,22 @@ import org.springframework.stereotype.Service;
 import com.ideadistribuidora.visus.data.Articulos;
 import com.ideadistribuidora.visus.data.Clientes;
 import com.ideadistribuidora.visus.data.Domicilios;
-import com.ideadistribuidora.visus.data.Listas;
+import com.ideadistribuidora.visus.data.ListasPorcentuales;
 import com.ideadistribuidora.visus.data.Medidas;
 import com.ideadistribuidora.visus.data.Pedidos;
+import com.ideadistribuidora.visus.data.PedidosItems;
+import com.ideadistribuidora.visus.data.PedidosListas;
 import com.ideadistribuidora.visus.data.Transportistas;
 import com.ideadistribuidora.visus.data.Vendedores;
 import com.ideadistribuidora.visus.data.Zonas;
 import com.ideadistribuidora.visus.data.repositories.ArticulosRepository;
 import com.ideadistribuidora.visus.data.repositories.ClientesRepository;
 import com.ideadistribuidora.visus.data.repositories.DomiciliosRepository;
+import com.ideadistribuidora.visus.data.repositories.ListasPorcentualesRepository;
 import com.ideadistribuidora.visus.data.repositories.ListasRepository;
 import com.ideadistribuidora.visus.data.repositories.MedidasRepository;
+import com.ideadistribuidora.visus.data.repositories.PedidosItemsRepository;
+import com.ideadistribuidora.visus.data.repositories.PedidosListasRepository;
 import com.ideadistribuidora.visus.data.repositories.PedidosRepository;
 import com.ideadistribuidora.visus.data.repositories.TransportistasRepository;
 import com.ideadistribuidora.visus.data.repositories.VendedoresRepository;
@@ -41,12 +45,16 @@ public class PedidosService {
     MedidasRepository medidasRepository;
     TransportistasRepository transportistasRepository;
     DomiciliosRepository DomiciliosRepository;
+    ListasPorcentualesRepository listasPorcentualesRepository;
+    PedidosItemsRepository pedidosItemsRepository;
+    PedidosListasRepository pedidosListasRepository;
 
     public PedidosService(PedidosRepository repository, ClientesRepository clientesRepository,
             VendedoresRepository vendedoresRepository, ZonasRepository zonasRepository,
             ListasRepository listasRepository, ArticulosRepository articulosRepository,
             MedidasRepository medidasRepository, TransportistasRepository transportistasRepository,
-            DomiciliosRepository domiciliosRepository) {
+            DomiciliosRepository domiciliosRepository, ListasPorcentualesRepository listasPorcentualesRepository,
+            PedidosItemsRepository pedidosItemsRepository,PedidosListasRepository pedidosListasRepository) {
         this.repository = repository;
         this.clientesRepository = clientesRepository;
         this.vendedoresRepository = vendedoresRepository;
@@ -56,6 +64,9 @@ public class PedidosService {
         this.medidasRepository = medidasRepository;
         this.transportistasRepository = transportistasRepository;
         this.DomiciliosRepository = domiciliosRepository;
+        this.listasPorcentualesRepository = listasPorcentualesRepository;
+        this.pedidosItemsRepository = pedidosItemsRepository;
+        this.pedidosListasRepository = pedidosListasRepository;
     }
 
     public Optional<Pedidos> get(int id) {
@@ -113,8 +124,8 @@ public class PedidosService {
         return zonasRepository.findAll();
     }
 
-    public List<Listas> getAllListas() {
-        return listasRepository.findAll();
+    public List<ListasPorcentuales> getAllListasPorc() {
+        return listasPorcentualesRepository.findAll();
     }
 
     public List<Articulos> getAllArticulos() {
@@ -180,6 +191,32 @@ public class PedidosService {
             domicilios = dom.get();
         }
         return domicilios;
+    }
+
+    public Integer getNextIdPedido() {
+        Integer nextId = repository.getNextIdPedido().orElse(1);
+        return nextId + 1;
+    }
+
+    public Articulos updateArticulos(Articulos idArticulo) {
+        Articulos artic = articulosRepository.save(idArticulo);
+        return artic;
+    }
+
+    public void saveAllPedItemsList(List<PedidosItems> pedidosItemsList) {
+        pedidosItemsRepository.saveAll(pedidosItemsList);
+    }
+
+    public void savePedidosListas(PedidosListas pedidosListas) {
+       pedidosListasRepository.save(pedidosListas);
+    }
+
+    public List<PedidosItems> findPedidosItemsByIdPedidos(Pedidos pedidos) {
+        return pedidosItemsRepository.findPedidosItemsByIdPedido(pedidos);
+    }
+
+    public List<PedidosListas> findPedidosListasByIdPedido(Pedidos pedidos) {
+        return pedidosListasRepository.findPedidosListasByIdPedido(pedidos);
     }
 
 }

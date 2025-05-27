@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.sql.init.SqlDataSourceScriptDataba
 import org.springframework.boot.autoconfigure.sql.init.SqlInitializationProperties;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import com.ideadistribuidora.visus.data.repositories.AlicuotasRepository;
 import com.ideadistribuidora.visus.data.repositories.ArticulosRepository;
@@ -26,6 +27,9 @@ import com.ideadistribuidora.visus.data.repositories.ListasPorcentualesRepositor
 import com.ideadistribuidora.visus.data.repositories.ListasRepository;
 import com.ideadistribuidora.visus.data.repositories.LocalidadesRepository;
 import com.ideadistribuidora.visus.data.repositories.MedidasRepository;
+import com.ideadistribuidora.visus.data.repositories.PagosRepository;
+import com.ideadistribuidora.visus.data.repositories.PedidosItemsRepository;
+import com.ideadistribuidora.visus.data.repositories.PedidosRepository;
 import com.ideadistribuidora.visus.data.repositories.PorcentualesRepository;
 import com.ideadistribuidora.visus.data.repositories.PresentacionesRepository;
 import com.ideadistribuidora.visus.data.repositories.ProveedoresBancosRepository;
@@ -50,6 +54,7 @@ import com.vaadin.flow.theme.Theme;
  *
  */
 @SpringBootApplication
+@EnableJpaRepositories(basePackages = "com.ideadistribuidora.visus.data.repositories")
 @Theme(value = "visus")
 @Push
 public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
@@ -73,7 +78,9 @@ public class Application extends SpringBootServletInitializer implements AppShel
             VendedoresRepository vendedoresRepository, ZonasRepository zonasRepository,
             CoeficientesRepository coeficientesRepository, ComisionesTramosRepository comisionesTramosRepository,
             TransportistasBancosRepository transportistasBancosRepository, TransportistasRepository transportistasRepository,
-            ListasPorcentualesRepository listasPorcentualesRepository, ListasRepository listasRepository, PorcentualesRepository porcentualesRepository) { 
+            ListasPorcentualesRepository listasPorcentualesRepository, ListasRepository listasRepository, 
+            PorcentualesRepository porcentualesRepository,PedidosRepository pedidosRepository,
+            PedidosItemsRepository pedidosItemsRepository,PagosRepository pagosRepository) { 
         // This bean ensures the database is only initialized when empty
         return new SqlDataSourceScriptDatabaseInitializer(dataSource, properties) {
             @Override
@@ -102,7 +109,10 @@ public class Application extends SpringBootServletInitializer implements AppShel
                 || transportistasRepository.count() == 0L
                 || listasPorcentualesRepository.count() == 0L 
                 || listasRepository.count() == 0L
-                || porcentualesRepository.count() == 0L) {
+                || porcentualesRepository.count() == 0L
+                || pedidosRepository.count() == 0L
+                || pedidosItemsRepository.count() == 0L
+                || pagosRepository.count() == 0L) {
                 return super.initializeDatabase();
             }
             return false;
@@ -113,12 +123,12 @@ public class Application extends SpringBootServletInitializer implements AppShel
         @Bean
         public CollaborationEngineConfiguration ceConfigBean() {
         CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
-                licenseEvent -> {
-                    // See <<ce.production.license-events>>
-                });
-        String path = "C:\\vaadin\\licenses";
-        //String path = "/opt/licenses";
-        configuration.setDataDir(path);
-        return configuration;
-    }
+        licenseEvent -> {
+            // See <<ce.production.license-events>>
+        });
+            String path = "C:\\vaadin\\licenses";
+            //String path = "/opt/licenses";
+                    configuration.setDataDir(path); // Removed as the method does not exist
+            return configuration;
+        }
 }

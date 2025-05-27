@@ -9,7 +9,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.ideadistribuidora.visus.data.Coeficientes;
-import com.ideadistribuidora.visus.data.Localidades;
 import com.ideadistribuidora.visus.data.repositories.CoeficientesRepository;
 
 @Service

@@ -18,6 +18,7 @@ import com.ideadistribuidora.visus.data.Coeficientes;
 import com.ideadistribuidora.visus.data.FormasDePago;
 import com.ideadistribuidora.visus.data.enums.ModalidadDePagoEnum;
 import com.ideadistribuidora.visus.services.FormasDePagoService;
+import com.ideadistribuidora.visus.views.utils.ComponentUtils;
 import com.ideadistribuidora.visus.views.utils.StringToShortConverter;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
@@ -27,6 +28,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -144,15 +146,15 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         // Configure Grid
         grid.addColumn(createFormasDePagoRenderer()).setHeader("Modalidad").setAutoWidth(true);
         grid.addColumn(formasDePago -> formasDePago.getIdCoeficiente().getDescripcion()).setHeader("Descripción").setAutoWidth(true);
-        grid.addColumn(formasDePago -> formasDePago.getIdCoeficiente().getCoeficiente()).setHeader("Coeficiente").setAutoWidth(true);
-        grid.addColumn(formasDePago -> formasDePago.getIdCoeficiente().getCuotas()).setHeader("Cuotas").setAutoWidth(true);
+        grid.addColumn(formasDePago -> formasDePago.getIdCoeficiente().getCoeficiente().setScale(2,RoundingMode.HALF_UP)).setHeader("Coeficiente").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
+        grid.addColumn(formasDePago -> formasDePago.getIdCoeficiente().getCuotas()).setHeader("Cuotas").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
         grid.addComponentColumn(formasDePago -> {
                     Checkbox checkbox = new Checkbox();
                     checkbox.setValue(formasDePago==null?false:formasDePago.isEsDtoProntoPago());
                     checkbox.setEnabled(false);
                     return checkbox;
             }).setHeader("Pronto Pago").setAutoWidth(true);
-        grid.addColumn(FormasDePago::getDtoProntoPago).setHeader("Dto. PP(%)").setAutoWidth(true);
+        grid.addColumn(formasDePago -> formasDePago.getDtoProntoPago().setScale(2,RoundingMode.HALF_UP)).setHeader("Dto. PP(%)").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
         grid.addComponentColumn(formasDePago -> {
                     Checkbox checkbox = new Checkbox();
                     checkbox.setValue(formasDePago==null?false:formasDePago.isMesesCompletos());
@@ -177,10 +179,10 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
             }
         });
 
-        gridSimulador.addColumn(Coeficientes::getCuotas).setHeader("Cuotas").setAutoWidth(true);
+        gridSimulador.addColumn(Coeficientes::getCuotas).setHeader("Cuotas").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
         gridSimulador.addColumn(coef -> new java.sql.Date(coef.getFecha().getTime()).toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                      .setHeader("Fecha").setAutoWidth(true);
-        gridSimulador.addColumn(Coeficientes::getMonto).setHeader("Monto").setAutoWidth(true);
+        gridSimulador.addColumn(Coeficientes::getMonto).setHeader("Monto").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
 
         gridSimulador.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);
         
@@ -356,10 +358,13 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
             cuotasSim.setValue(String.valueOf(e.getValue().getCuotas()));
         });
         valorSim = new BigDecimalField("Valor");
+        ComponentUtils.setDecimalsOFields(valorSim, 2);
         valorSim.setWidth("25%");
         cuotasSim = new TextField("Cuotas");
         cuotasSim.setWidth("25%");
+        cuotasSim.setValue("0");
         montoSim = new BigDecimalField("Monto");
+        ComponentUtils.setDecimalsOFields(montoSim, 2);
         montoSim.setWidth("25%");
         
         modalidad = new ComboBox<>("Modalidad");
@@ -378,8 +383,10 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         coeficienteDesc.setWidth("25%");
         coeficiente = new BigDecimalField("Valor del Coeficiente");
         coeficiente.setReadOnly(true);
+        ComponentUtils.setDecimalsOFields(coeficiente, 2);
         coeficiente.setWidth("25%");
         cuotas = new TextField("Cuotas");
+        cuotas.setValue("0");
         cuotas.setReadOnly(true);
         cuotas.setWidth("25%");   
         esDtoProntoPago = new Checkbox("Pronto Pago");
@@ -393,6 +400,7 @@ public class FormasDePagoView extends Div implements BeforeEnterObserver {
         mesesCompletos = new Checkbox("Meses Completos");
         mesesCompletos.setWidth("25%");
         dtoProntoPago = new BigDecimalField("Dto. Pronto Pago");
+         ComponentUtils.setDecimalsOFields(dtoProntoPago, 2);
          VerticalLayout prontPag = new VerticalLayout();
          prontPag.add(esDtoProntoPago, dtoProntoPago);
          prontPag.setWidth("25%");

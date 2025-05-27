@@ -20,7 +20,6 @@ import com.ideadistribuidora.visus.data.enums.TipoTransporteEnum;
 import com.ideadistribuidora.visus.services.TransportistasService;
 import com.ideadistribuidora.visus.views.dialogs.DialogConfirmacion;
 import com.ideadistribuidora.visus.views.dialogs.DialogSaveEditBancos;
-import com.ideadistribuidora.visus.views.dialogs.DialogSaveEditDomicilios;
 import com.ideadistribuidora.visus.views.utils.ComponentUtils;
 import com.ideadistribuidora.visus.views.utils.StringToLongConverter;
 import com.ideadistribuidora.visus.views.utils.StringToShortConverter;

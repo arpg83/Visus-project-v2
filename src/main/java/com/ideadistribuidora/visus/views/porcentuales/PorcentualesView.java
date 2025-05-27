@@ -1,5 +1,6 @@
 package com.ideadistribuidora.visus.views.porcentuales;
 
+import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -97,7 +99,7 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
 
         // Configure Grid
         grid.addColumn(createPorcentualesRenderer()).setHeader("Descripción").setAutoWidth(true);
-        grid.addColumn(Porcentuales::getPorcentual).setHeader("Porcentual").setAutoWidth(true);
+        grid.addColumn(porcentual -> porcentual.getPorcentual().setScale(2,RoundingMode.HALF_UP)).setHeader("Porcentual").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);;
         grid.addColumn(Porcentuales::getInicioVigencia).setHeader("Inicio Vigencia").setAutoWidth(true);
         grid.addColumn(Porcentuales::getFinVigencia).setHeader("Fin Vigencia").setAutoWidth(true);
         grid.addColumn(Porcentuales::getClasificacion).setHeader("Clasificacion").setAutoWidth(true);
@@ -283,8 +285,9 @@ public class PorcentualesView extends Div implements BeforeEnterObserver {
         descripcion = new TextField("Descripción");
         descripcion.setMaxLength(50);
         porcentual = new BigDecimalField("Porcentual");
-        clasificacion = new ComboBox<ClasificacionEnum>("Clasificacion");
-        clasificacion.setPlaceholder("Seleccione Departamento");
+        ComponentUtils.setDecimalsOFields(porcentual, 2);
+        clasificacion = new ComboBox<ClasificacionEnum>("Clasificación");
+        clasificacion.setPlaceholder("Seleccione Clasificación");
         clasificacion.setItems(ClasificacionEnum.values());
         clasificacion.setItemLabelGenerator(ClasificacionEnum::getDisplayName);
         clasificacion.setRequired(true);

@@ -22,6 +22,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -98,9 +99,18 @@ public class ComisionesView extends Div implements BeforeEnterObserver {
 
         // Configure Grid
         grid.addColumn(createComisionesRenderer()).setHeader("Tipo de Comision").setAutoWidth(true);
-        grid.addColumn(Comisiones::getPorcentajeSobreImporte).setHeader("% Sobre Importe").setAutoWidth(true);
-        grid.addColumn(Comisiones::getPorcentajeImporteFijo).setHeader("% Sobre Importe Fijo").setAutoWidth(true);
-        grid.addColumn(Comisiones::getPorcentajeSobreMargen).setHeader("% Sobre Margen").setAutoWidth(true);
+        grid.addColumn(Comisiones::getPorcentajeSobreImporte)
+            .setHeader("% Sobre Importe")
+            .setAutoWidth(true)
+            .setTextAlign(ColumnTextAlign.END);
+        grid.addColumn(Comisiones::getPorcentajeImporteFijo)
+            .setHeader("% Sobre Importe Fijo")
+            .setAutoWidth(true)
+            .setTextAlign(ColumnTextAlign.END);
+        grid.addColumn(Comisiones::getPorcentajeSobreMargen)
+            .setHeader("% Sobre Margen")
+            .setAutoWidth(true)
+            .setTextAlign(ColumnTextAlign.END);
         dataView = grid.setItems(comisionesService.comisionesList());
         searchFilter(dataView);
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
@@ -287,8 +297,11 @@ public class ComisionesView extends Div implements BeforeEnterObserver {
         vigenciaHasta = new DateTimePicker("Vigencia Hasta");
         vigenciaHasta.setDatePickerI18n(ComponentUtils.getI18n());
         porcentajeSobreImporte = new BigDecimalField("Porcentual Sobre Importe");
+        ComponentUtils.setDecimalsOFields(porcentajeSobreImporte, 2);
         porcentajeImporteFijo = new BigDecimalField("Porcentual Sobre Importe Fijo");
+        ComponentUtils.setDecimalsOFields(porcentajeImporteFijo, 2);
         porcentajeSobreMargen = new BigDecimalField("Porcentual Sobre Margen");
+        ComponentUtils.setDecimalsOFields(porcentajeSobreMargen, 2);
 
         formLayout.add(tipoComision, fechaModificacion, vigenciaDesde, vigenciaHasta, porcentajeSobreImporte, porcentajeImporteFijo, porcentajeSobreMargen);
 

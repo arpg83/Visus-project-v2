@@ -1,12 +1,13 @@
 package com.ideadistribuidora.visus.data.enums;
 
 public enum EstadoPedidoEnum {
-    ACEPTADO("ACEPTADO"),
-    CANCELADO("CANCELADO"),
-    VERIFICANDO_FACTURA("VERIFICANDO FACTURA"),
-    FACTURADO("FACTURADO"),
-    EN_PICKING ("EN PICKING"),
-    ENVIADO ("ENVIADO");
+    Aceptado("ACEPTADO"),
+    Cancelado("CANCELADO"),
+    Verificando_Factura("VERIFICANDO FACTURA"),
+    Facturado("FACTURADO"),
+    En_Picking ("EN PICKING"),
+    Enviado ("ENVIADO");
+
 
     private String estadoPedido;
 

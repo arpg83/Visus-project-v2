@@ -34,7 +34,7 @@ const groupMenuItems = (menuItems: readonly Readonly<{ to: string; icon?: string
         displayTitle = 'Transportistas';
       } else if (['Articulos', 'Medidas', 'Presentaciones', 'Depositos', 'Rubros', 'Ubicaciones', 'Lineas'].includes(title)) {
         displayTitle = 'Artículos';
-      } else if (['Alicuotas', 'Bancos', 'Porcentuales','Coeficientes','Formas De Pago'].includes(title)) {
+      } else if (['Alicuotas', 'Bancos', 'Porcentuales','Coeficientes','Formas De Pago', 'Pagos'].includes(title)) {
         displayTitle = 'Finanzas';
       } else if (['Departamentos', 'Localidades'].includes(title)) {
         displayTitle = 'Recursos';

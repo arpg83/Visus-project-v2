@@ -20,7 +20,7 @@ public class PedidosListas {
     @NotNull
     @ManyToOne
     @JoinColumn(name = "idlista", nullable = false)
-    private Listas idListas;
+    private ListasPorcentuales idListas;
 
     // Getters and Setters
     public int getIdPedidoListas() {
@@ -39,11 +39,11 @@ public class PedidosListas {
         this.idPedido = idPedido;
     }
 
-    public Listas getIdListas() {
+    public ListasPorcentuales getIdListas() {
         return idListas;
     }
 
-    public void setIdListas(Listas idListas) {
+    public void setIdListas(ListasPorcentuales idListas) {
         this.idListas = idListas;
     }
 }

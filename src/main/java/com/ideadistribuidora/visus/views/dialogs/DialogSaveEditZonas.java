@@ -25,7 +25,6 @@ public class DialogSaveEditZonas extends Dialog {
     private Button saveZonaButton;
     private Button cancelZonaButton;
     private Zonas zonas;
-    private VisitaEnum[] allVisita;
 
     public DialogSaveEditZonas(String header,
             Zonas zonaSelected, ConfirmationHandler<Zonas> onConfirm) {
