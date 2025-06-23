@@ -83,11 +83,6 @@ public class PedidosDetailsFormLayout extends FormLayout {
         vendedor.setValue(pedidos.getIdVendedor().getNombre());
         List<PedidosListas> pedidosListas = pedidosService.findPedidosListasByIdPedido(pedidos);
         bonificacionRecargoListas.setItems("Ninguno", "Bonificación(%)", "Recargo(%)", "Aplicar Listas");
-        ComponentUtils.setDecimalsOFields(bonificacionRecListField,2);
-        ComponentUtils.setDecimalsOFields(bonificacionField, 2);
-        ComponentUtils.setDecimalsOFields(subTotalSinImpuestos, 2);
-        ComponentUtils.setDecimalsOFields(subTotalConIMpuestos,2);
-        ComponentUtils.setDecimalsOFields(totalPedido, 2);
         if(pedidos.isEsBonificacion()){
             bonificacionRecargoListas.setValue("Bonificación(%)");
             bonificacionRecListField.setValue(pedidos.getBonificacion());
@@ -95,22 +90,30 @@ public class PedidosDetailsFormLayout extends FormLayout {
         }else if(pedidos.isEsRecargo()){
             bonificacionRecargoListas.setValue("Recargo(%)");
             bonificacionRecListField.setValue(pedidos.getRecargo());
+            bonificacionField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
         }else if (pedidosListas != null && !pedidosListas.isEmpty()){
             bonificacionRecargoListas.setValue("Aplicar Listas");
             pedidosListasField.setValue(pedidosListas.get(0).getIdListas().getLista().getDescripcion()+" "+pedidosListas.get(0).getIdListas().getPorcentual().getDescripcion());
+            bonificacionField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
         }else{
            bonificacionRecargoListas.setValue("Ninguno");
+           bonificacionField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
         }
 
         List<PedidosItems> pedidosItemsList = pedidosService.findPedidosItemsByIdPedidos(pedidos);
 
         calculateAndFillTotalPedido(pedidosItemsList,pedidos,pedidosListas);
+             ComponentUtils.setDecimalsOFields(bonificacionRecListField,2);
+        ComponentUtils.setDecimalsOFields(bonificacionField, 2);
+        ComponentUtils.setDecimalsOFields(subTotalSinImpuestos, 2);
+        ComponentUtils.setDecimalsOFields(subTotalConIMpuestos,2);
+        ComponentUtils.setDecimalsOFields(totalPedido, 2);
 
         gridPedidosItems.removeAllColumns(); // Clear any existing columns to avoid duplication
 
         gridPedidosItems.addColumn(pedidosItems -> pedidosItems.getIdArticulo().getDescripcion())
             .setHeader("Artículo").setAutoWidth(true);
-        gridPedidosItems.addColumn(pedidosItems -> pedidosItems.getCantidad())
+        gridPedidosItems.addColumn(pedidosItems -> ComponentUtils.getRoundedValueBigdec(pedidosItems.getCantidad()))
             .setHeader("Cantidad").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
         gridPedidosItems.addColumn(pedidosItems -> pedidosItems.getIdArticulo().getIdAlicuota().getDescripcion())
             .setHeader("Alicuota").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);

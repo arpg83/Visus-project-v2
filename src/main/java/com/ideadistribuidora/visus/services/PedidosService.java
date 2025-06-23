@@ -44,7 +44,7 @@ public class PedidosService {
     ArticulosRepository articulosRepository;
     MedidasRepository medidasRepository;
     TransportistasRepository transportistasRepository;
-    DomiciliosRepository DomiciliosRepository;
+    DomiciliosRepository domiciliosRepository;
     ListasPorcentualesRepository listasPorcentualesRepository;
     PedidosItemsRepository pedidosItemsRepository;
     PedidosListasRepository pedidosListasRepository;
@@ -63,7 +63,7 @@ public class PedidosService {
         this.articulosRepository = articulosRepository;
         this.medidasRepository = medidasRepository;
         this.transportistasRepository = transportistasRepository;
-        this.DomiciliosRepository = domiciliosRepository;
+        this.domiciliosRepository = domiciliosRepository;
         this.listasPorcentualesRepository = listasPorcentualesRepository;
         this.pedidosItemsRepository = pedidosItemsRepository;
         this.pedidosListasRepository = pedidosListasRepository;
@@ -185,7 +185,7 @@ public class PedidosService {
     }
 
     public Domicilios findByIdDomicilios(int int1) {
-        Optional<Domicilios> dom = DomiciliosRepository.findById(int1);
+        Optional<Domicilios> dom = domiciliosRepository.findById(int1);
         Domicilios domicilios = new Domicilios();
         if (dom.isPresent()) {
             domicilios = dom.get();

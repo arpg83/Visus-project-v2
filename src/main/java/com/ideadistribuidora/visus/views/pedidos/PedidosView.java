@@ -1,6 +1,7 @@
 package com.ideadistribuidora.visus.views.pedidos;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
@@ -70,6 +71,11 @@ import com.vaadin.flow.server.StreamResource;
 @Menu(icon = "line-awesome/svg/columns-solid.svg", order = 1)
 @Route(value = "2/:pedidosID?/:action?(edit)")
 public class PedidosView extends Div {
+    private static final String BONIFICAR_LABEL = "Bonificar(%)";
+    private static final String BONIFICACION_LABEL = "Bonificación(%)";
+    private static final String RECARGAR_LABEL = "Recargo(%)";
+    private static final String NINGUNO_LABEL = "Ninguno";
+    private static final String APLICAR_LISTAS_LABEL = "Aplicar Listas";
     private CollaborationBinder<Pedidos> binder;
     private CollaborationBinder<PedidosItems> binderPedidosItems;
     private Notification n;
@@ -86,8 +92,8 @@ public class PedidosView extends Div {
     private ComboBox<Clientes> idCliente;
     private ComboBox<Vendedores> vendedores;
 
-    private ComboBox<Domicilios> domicilios;
-    private TextField domicilioClienteString;
+    private ComboBox<String> domicilios;
+    //private TextField domicilioClienteString;
 
     private RadioButtonGroup<String> bonificacionRecargoListas;
     private BigDecimalField bonificacionRecListField;
@@ -121,9 +127,10 @@ public class PedidosView extends Div {
 
     private Button nuevoPedido;
     private Button cancelar;
-    private Button Picking;
+    private Button picking;
     private Button pagarPedido;
     private Button imprimir;
+    private Button modificarPedido;
 
     private Button cancelarAcciones;
     private Button rolbackItem;
@@ -133,7 +140,7 @@ public class PedidosView extends Div {
     private CollaborationAvatarGroup avatarGroup;
     private UserInfo userInfo;
 
-    private Pedidos pedidos;
+    private Pedidos pedidos = new Pedidos();
     private PedidosItems pedidosItems;
     private PedidosListas pedidosListas;
     private List<PedidosItems> pedidosItemsList = new ArrayList<>();
@@ -166,7 +173,7 @@ public class PedidosView extends Div {
         HorizontalLayout horizontalButLayout = new HorizontalLayout();
         nuevoPedido = new Button("Nuevo Pedido", event -> {
             dialog = new Dialog();
-            VerticalLayout dialogLayout = fillDialog();
+            VerticalLayout dialogLayout = fillDialog(pedidos);
             dialog.add(dialogLayout);
             initBinderPedidos();
             initBinderPedidosItems();
@@ -175,12 +182,22 @@ public class PedidosView extends Div {
         nuevoPedido.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         nuevoPedido.getStyle().set("background-color", "var(--lumo-primary-color)");
         nuevoPedido.getStyle().set("color", "white");
+        modificarPedido = new Button("Modificar Pedido", e -> {
+            dialog = new Dialog();
+            VerticalLayout dialogLayout = fillDialog(pedidos);
+            dialog.add(dialogLayout);
+            initBinderPedidos();
+            initBinderPedidosItems();
+            dialog.open();
+        });
+        modificarPedido.setEnabled(false);
+        modificarPedido.addThemeVariants(ButtonVariant.LUMO_WARNING);
         cancelar = new Button("Cancelar", e -> {
-            for (Pedidos pedidos : pedidosSelected) {
+            for (Pedidos ped : pedidosSelected) {
                 try {
-                    pedidos.setEstadoPedido(EstadoPedidoEnum.Cancelado);
-                    pedidos.setDomicilios(new Domicilios());
-                    pedidosService.update(pedidos);
+                    ped.setEstadoPedido(EstadoPedidoEnum.Cancelado);
+                    ped.setDomicilios(new Domicilios());
+                    pedidosService.update(ped);
                 } catch (ObjectOptimisticLockingFailureException ex) {
                     Notification.show("El pedido ya ha sido modificado por otro usuario: " + ex.getMessage(), 3000,
                             Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -192,12 +209,12 @@ public class PedidosView extends Div {
         cancelar.setEnabled(false);
         cancelar.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
         cancelar.getStyle().set("background-color", "var(--lumo-error-color)");
-        Picking = new Button("Picking", e -> {
+        picking = new Button("Picking", e -> {
             // agregar acciones
         });
-        Picking.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        Picking.getStyle().set("background-color", "var(--lumo-success-color)");
-        Picking.getStyle().set("color", "white");
+        picking.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        picking.getStyle().set("background-color", "var(--lumo-success-color)");
+        picking.getStyle().set("color", "white");
         pagarPedido = new Button("Pagar Pedido", e -> {
             for (Pedidos ped : pedidosSelected) {
                 ped.setEstadoPago(EstadoPagoEnum.Pago_Aprobado);
@@ -210,20 +227,14 @@ public class PedidosView extends Div {
         pagarPedido.getStyle().set("background-color", "purple");
         pagarPedido.getStyle().set("color", "white");
         imprimir = new Button("Imprimir", e -> {
-            ReportePedidos reportePedidos = new ReportePedidos();
 
             try {
-                byte[] pdf = reportePedidos.exportarReporte(pedidosSelected, pedidosService);
-                // StreamResource
-                StreamResource resource = new StreamResource(
-                        "pedidos.pdf",
-                        () -> new ByteArrayInputStream(pdf));
-                resource.setContentType("application/pdf");
-                Anchor downloadLink = new Anchor(resource, "");
-                downloadLink.getElement().setAttribute("download", true);
+                // Obtener los objetos HttpServletRequest y HttpServletResponse
+                Anchor downloadLink = new Anchor(buildPdfResource(), "");
+                downloadLink.setTarget("_blank");
                 downloadLink.getElement().callJsFunction("click");
+                add(downloadLink);
 
-                add(downloadLink); // necesario para que el JS `click()` funcione
             } catch (Exception ex) {
                 Notification.show("Error al exportar el reporte: " + ex.getMessage(), 3000, Position.MIDDLE)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -233,19 +244,19 @@ public class PedidosView extends Div {
         imprimir.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         imprimir.getStyle().set("background-color", "var(--lumo-contrast-30pct)");
         imprimir.getStyle().set("color", "white");
-        horizontalButLayout.add(avatarGroup, nuevoPedido, cancelar, Picking, pagarPedido, imprimir);
+        horizontalButLayout.add(avatarGroup, nuevoPedido, modificarPedido, cancelar, picking, pagarPedido, imprimir);
         gridPedidos.setSelectionMode(Grid.SelectionMode.MULTI);
         gridPedidos.addColumn(createToggleDetailsRenderer(gridPedidos))
                 .setWidth("80px").setFlexGrow(0).setFrozen(true);
         gridPedidos.addColumn(createPedidosRenderer())
                 .setHeader("Pedido").setAutoWidth(true);
-        gridPedidos.addColumn(pedidos -> pedidos.getIdCliente().getNombreCliente())
+        gridPedidos.addColumn(p -> p.getIdCliente().getNombreCliente())
                 .setHeader("Cliente").setAutoWidth(true);
-        gridPedidos.addColumn(pedidos -> pedidos.getEstadoPedido().getEstadoPedido())
+        gridPedidos.addColumn(p -> p.getEstadoPedido().getEstadoPedido())
                 .setHeader("Status").setAutoWidth(true);
         gridPedidos
-                .addComponentColumn(pedidos -> {
-                    return setSpan(pedidos.getEstadoPago());
+                .addComponentColumn(p -> {
+                    return setSpan(p.getEstadoPago());
                 })
                 .setHeader("Pago").setAutoWidth(true);
 
@@ -254,6 +265,13 @@ public class PedidosView extends Div {
         gridPedidos.addSelectionListener(event -> {
             pedidosSelected.clear();
             pedidosSelected.addAll(event.getAllSelectedItems());
+            if (event.getAllSelectedItems().size() == 1) {
+                pedidos = event.getFirstSelectedItem().orElse(null);
+                modificarPedido.setEnabled(true);
+            } else {
+                pedidos = null;
+                modificarPedido.setEnabled(false);
+            }
             cancelar.setEnabled(!pedidosSelected.isEmpty());
             pagarPedido.setEnabled(!pedidosSelected.isEmpty());
             imprimir.setEnabled(!pedidosSelected.isEmpty());
@@ -275,6 +293,20 @@ public class PedidosView extends Div {
 
     }
 
+    private StreamResource buildPdfResource() throws Exception {
+        return new StreamResource("Pedidos.pdf", () -> {
+            ByteArrayOutputStream pdfReportStream = new ByteArrayOutputStream();
+            try {
+                new ReportePedidos().exportarReporte(pedidosSelected, pedidosService, pdfReportStream);
+                return new ByteArrayInputStream(pdfReportStream.toByteArray());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new ByteArrayInputStream(new byte[0]);
+            }
+        });
+
+    }
+
     private ComponentRenderer<PedidosDetailsFormLayout, Pedidos> createPedidosDetailsRenderer() {
         return new ComponentRenderer<>(() -> new PedidosDetailsFormLayout(pedidosService),
                 PedidosDetailsFormLayout::setPedidos);
@@ -287,10 +319,8 @@ public class PedidosView extends Div {
             if (searchTerm.isEmpty())
                 return true;
 
-            boolean matchesFullName = matchesTerm(pedidoSearh.getIdCliente().getNombreCliente(),
+            return matchesTerm(pedidoSearh.getIdCliente().getNombreCliente(),
                     searchTerm);
-
-            return matchesFullName;
         });
     }
 
@@ -314,8 +344,8 @@ public class PedidosView extends Div {
                             </vaadin-button>
                         """)
                 .withFunction("handleClick",
-                        pedidos -> grid.setDetailsVisible(pedidos,
-                                !grid.isDetailsVisible(pedidos)));
+                        p -> grid.setDetailsVisible(p,
+                                !grid.isDetailsVisible(p)));
     }
 
     private LitRenderer<Pedidos> createPedidosRenderer() {
@@ -329,40 +359,40 @@ public class PedidosView extends Div {
     }
 
     private Span setSpan(EstadoPagoEnum estadoPago2) {
-        Span estadoPagoSpan = new Span();
-        estadoPagoSpan.setText(estadoPago2.getEstadoPago());
+        Span estPagoSpan = new Span();
+        estPagoSpan.setText(estadoPago2.getEstadoPago());
         if (estadoPago2.equals(EstadoPagoEnum.Pago_Pendiente)) {
-            estadoPagoSpan.getElement().getStyle().set("background-color",
+            estPagoSpan.getElement().getStyle().set("background-color",
                     "var(--lumo-warning-color)");
-            estadoPagoSpan.getElement().getStyle().set("padding", "5px");
-            estadoPagoSpan.getElement().getStyle().setColor("white");
-            estadoPagoSpan.getElement().getStyle().setFontWeight("bold");
-            estadoPagoSpan.getElement().getStyle().setPaddingLeft("10px");
-            estadoPagoSpan.getElement().getStyle().setPaddingRight("10px");
+            estPagoSpan.getElement().getStyle().set("padding", "5px");
+            estPagoSpan.getElement().getStyle().setColor("white");
+            estPagoSpan.getElement().getStyle().setFontWeight("bold");
+            estPagoSpan.getElement().getStyle().setPaddingLeft("10px");
+            estPagoSpan.getElement().getStyle().setPaddingRight("10px");
         } else if (estadoPago2.equals(EstadoPagoEnum.Pago_Aprobado)) {
-            estadoPagoSpan.getElement().getStyle().set("background-color",
+            estPagoSpan.getElement().getStyle().set("background-color",
                     "var(--lumo-success-color)");
-            estadoPagoSpan.getElement().getStyle().set("padding", "5px");
-            estadoPagoSpan.getElement().getStyle().setColor("white");
-            estadoPagoSpan.getElement().getStyle().setFontWeight("bold");
-            estadoPagoSpan.getElement().getStyle().setPaddingLeft("10px");
-            estadoPagoSpan.getElement().getStyle().setPaddingRight("10px");
+            estPagoSpan.getElement().getStyle().set("padding", "5px");
+            estPagoSpan.getElement().getStyle().setColor("white");
+            estPagoSpan.getElement().getStyle().setFontWeight("bold");
+            estPagoSpan.getElement().getStyle().setPaddingLeft("10px");
+            estPagoSpan.getElement().getStyle().setPaddingRight("10px");
         } else if (estadoPago2.equals(EstadoPagoEnum.Pago_Rechazado)) {
-            estadoPagoSpan.getElement().getStyle()
+            estPagoSpan.getElement().getStyle()
                     .setBackgroundColor("var(--lumo-error-color)");
-            estadoPagoSpan.getElement().getStyle()
+            estPagoSpan.getElement().getStyle()
                     .setColor("white").setFontWeight("bold")
                     .setPaddingLeft("10px").setPaddingRight("10px")
                     .setPaddingTop("5px").setPaddingBottom("5px");
         } else if (estadoPago2.equals(EstadoPagoEnum.Sin_Estado)) {
-            estadoPagoSpan.getElement().getStyle()
+            estPagoSpan.getElement().getStyle()
                     .setBackgroundColor("black");
-            estadoPagoSpan.getElement().getStyle()
+            estPagoSpan.getElement().getStyle()
                     .setColor("white").setFontWeight("bold")
                     .setPaddingLeft("10px").setPaddingRight("10px")
                     .setPaddingTop("5px").setPaddingBottom("5px");
         }
-        return estadoPagoSpan;
+        return estPagoSpan;
     }
 
     private void serialize() {
@@ -371,20 +401,21 @@ public class PedidosView extends Div {
                 idClientes -> (Clientes) pedidosService
                         .findByIdClientes(Integer.parseInt(idClientes)));
         this.binder.setSerializer(Vendedores.class,
-                vendedores -> String.valueOf(vendedores.getIdVendedor()),
-                idVendedores -> (Vendedores) pedidosService
+                vend -> String.valueOf(vend.getIdVendedor()),
+                idVendedores -> pedidosService
                         .findByIdVendedores(Integer.parseInt(idVendedores)));
         this.binder.setSerializer(Domicilios.class,
-                domicilios -> String.valueOf(domicilios.getIdDomicilio()),
-                idDomicilios -> (Domicilios) pedidosService
+                dom -> String.valueOf(dom.getIdDomicilio()),
+                idDomicilios -> pedidosService
                         .findByIdDomicilios(Integer.parseInt(idDomicilios)));
 
     }
 
-    private VerticalLayout fillDialog() {
+    private VerticalLayout fillDialog(Pedidos pedidos) {
+
         this.isAplicarListas = false;
         fechaPedido = new DatePicker("Fecha");
-        fechaPedido.setValue(LocalDate.now());
+        fechaPedido.setValue(pedidos != null ? pedidos.getFechaPedido() : LocalDate.now());
         fechaPedido.setPlaceholder("dd/mm/aaaa");
         fechaPedido.setI18n(ComponentUtils.getI18n());
         fechaPedido.addValueChangeListener(event -> {
@@ -394,13 +425,15 @@ public class PedidosView extends Div {
         });
 
         plataforma = new TextField("Plataforma");
-        plataforma.setValue(PlataformaEnum.WEB.getPlataforma());
+        plataforma.setValue(
+                pedidos!= null && pedidos.getPlataforma() !=null ? pedidos.getPlataforma().getPlataforma() : PlataformaEnum.WEB.getPlataforma());
         plataforma.setReadOnly(true);
         idPedidoField = new IntegerField("Pedido");
-        idPedidoField.setValue(pedidosService.getNextIdPedido());
+        idPedidoField.setValue(pedidos != null ? pedidos.getIdPedido() : pedidosService.getNextIdPedido());
         idPedidoField.setReadOnly(true);
         estadoPedidoSpan = new Span();
-        estadoPedidoSpan.setText(EstadoPedidoEnum.En_Picking.getEstadoPedido());
+        estadoPedidoSpan.setText(pedidos != null && pedidos.getEstadoPedido() != null ? pedidos.getEstadoPedido().getEstadoPedido()
+                : EstadoPedidoEnum.En_Picking.getEstadoPedido());
         estadoPedidoSpan.getElement().getStyle().setBackgroundColor("var(--lumo-primary-text-color)");
         estadoPedidoSpan.getElement().getStyle().setColor("white");
         estadoPedidoSpan.getElement().getStyle().setFontWeight("bold");
@@ -409,10 +442,12 @@ public class PedidosView extends Div {
         estadoPedido = new TextField();
         // Populate items first
         estadoPedido.setVisible(false);
-        estadoPedido.setValue(EstadoPedidoEnum.En_Picking.getEstadoPedido());
+        estadoPedido.setValue(pedidos != null && pedidos.getEstadoPedido() != null ? pedidos.getEstadoPedido().getEstadoPedido()
+                : EstadoPedidoEnum.En_Picking.getEstadoPedido());
 
         estadoPagoSpan = new Span();
-        estadoPagoSpan.setText(EstadoPagoEnum.Pago_Pendiente.getEstadoPago());
+        estadoPagoSpan.setText(pedidos != null && pedidos.getEstadoPago() != null ? pedidos.getEstadoPago().getEstadoPago()
+                : EstadoPagoEnum.Pago_Pendiente.getEstadoPago());
         estadoPagoSpan.getElement().getStyle().set("background-color",
                 "var(--lumo-warning-color)");
         estadoPagoSpan.getElement().getStyle().set("padding", "5px");
@@ -421,18 +456,26 @@ public class PedidosView extends Div {
         estadoPagoSpan.getElement().getStyle().setPaddingLeft("10px");
         estadoPagoSpan.getElement().getStyle().setPaddingRight("10px");
         estadoPago = new TextField();
-        estadoPago.setValue(EstadoPagoEnum.Pago_Pendiente.getEstadoPago());
+        estadoPago.setValue(pedidos != null && pedidos.getEstadoPago() != null ? pedidos.getEstadoPago().getEstadoPago()
+                : EstadoPagoEnum.Pago_Pendiente.getEstadoPago());
         estadoPago.setVisible(false);
-
         idCliente = new ComboBox<>("Cliente");
         idCliente.setWidth(25, Unit.PERCENTAGE);
-        idCliente.setPlaceholder("Buscar Cliente");
-        idCliente.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
         idCliente.setItems(pedidosService.getAllclientes());
         idCliente.setItemLabelGenerator(Clientes::getNombreCliente);
+        if (pedidos != null && pedidos.getIdCliente() != null) {
+            idCliente.setValue(pedidos.getIdCliente());
+            idCliente.setPlaceholder(pedidos.getIdCliente().getNombreCliente());
+        } else {
+            idCliente.setPlaceholder("Buscar Cliente");
+            idCliente.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
+        }
+        domicilios = new ComboBox<>("Domicilio de Envío");
+        
+        List<Domicilios> domi = pedidosService.getDomicilioByIdCliente(idCliente.getValue().getIdCliente());
+         List <String> domiString = new ArrayList<>();
         idCliente.addValueChangeListener(event -> {
             if (idCliente.getValue() != null) {
-                List<Domicilios> domi = pedidosService.getDomicilioByIdCliente(idCliente.getValue().getIdCliente());
                 if (domi.isEmpty()) {
                     domicilios.clear();
                     domicilios.setItems();
@@ -440,9 +483,6 @@ public class PedidosView extends Div {
                             "No se encontraron Domicilios para el Cliente seleccionado",
                             3000, Position.MIDDLE);
                     n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                } else {
-                    domicilios.setItems(domi);
-                    domicilios.setItemLabelGenerator(domicilios -> construirDireccion(domicilios));
                 }
             } else {
                 domicilios.clear();
@@ -456,35 +496,148 @@ public class PedidosView extends Div {
         vendedores.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
         vendedores.setItems(pedidosService.getAllVendedores());
         vendedores.setItemLabelGenerator(Vendedores::getNombre);
+        if (pedidos != null && pedidos.getIdVendedor() != null) {
+            vendedores.setValue(pedidos.getIdVendedor());
+        }
+         domi.stream().forEach(d -> {
+                       domiString.add(construirDireccion(d));
+                    });
 
-        domicilioClienteString = new TextField();
-        domicilioClienteString.setVisible(false);
+        if (pedidos != null && pedidos.getDomicilioClienteString() != null){
+            domicilios.setItems(domiString);
+            domicilios.setItemLabelGenerator(dom -> dom);
+            domicilios.setValue(pedidos.getDomicilioClienteString());
 
-        domicilios = new ComboBox<>("Domicilio de Envío");
-        domicilios.setPlaceholder("Selecione Domicilio");
-        domicilios.addValueChangeListener(event -> {
-            Domicilios domicilio = domicilios.getValue() == null ? new Domicilios() : domicilios.getValue();
-            domicilioClienteString.setValue(construirDireccion(domicilio));
-
-        });
-
+            domicilios.setPlaceholder(pedidos.getDomicilioClienteString());
+        }else{
+            domicilios.setItems(domiString);
+            domicilios.setItemLabelGenerator(dom -> dom);
+            domicilios.setPlaceholder("Seleccione Domicilio");
+        } 
+        // domicilios.addValueChangeListener(event -> {
+        //     String domicilio = domicilios.getValue() == null ? "" : domicilios.getValue();
+        //     if(pedidos != null){
+        //         domicilioClienteString.setValue(
+        //             pedidos.getDomicilioClienteString() != null ? pedidos.getDomicilioClienteString() : "");
+        //     }else{
+        //         domicilioClienteString.setValue(construirDireccion(domicilio));
+        //     }
+        // });
         bonificacionRecargoListas = new RadioButtonGroup<>();
-        bonificacionRecargoListas.setItems("Ninguno", "Bonificación(%)", "Recargo(%)", "Aplicar Listas");
-        bonificacionRecargoListas.setValue("Ninguno"); // Allow no selection
-
+        bonificacionRecargoListas.setItems(NINGUNO_LABEL, BONIFICACION_LABEL, RECARGAR_LABEL, APLICAR_LISTAS_LABEL);
+        List<PedidosListas> pedList = new ArrayList<>();
+        subTotalConIMpuestos = new BigDecimalField();
         bonificacionRecListField = new BigDecimalField();
         bonificacionRecListField.setEnabled(false);
+        bonificacionField = new BigDecimalField();
+        recargoField = new BigDecimalField();
+        esBonificacionPedido = new Checkbox();
+        esRecargoPedido = new Checkbox();
+        listas = new ComboBox<>();
+        listas.setEnabled(false);
+        subTotalSinImpuestos = new BigDecimalField();
+        totalPedido = new BigDecimalField();
+        
+        // Primero agrega el listener
+        bonificacionRecargoListas.addValueChangeListener(event -> {
+            String selectedOption = event.getValue();
+            if (BONIFICACION_LABEL.equals(selectedOption)) {
+                esBonificacionPedido.setValue(true);
+                esRecargoPedido.setValue(false);
+                this.pedidos.setEsBonificacion(true);
+                this.pedidos.setEsRecargo(false);
+                this.isAplicarListas = false;
+                bonificacionRecListField.setEnabled(true);
+                bonificacionRecListField.setValue(this.pedidos.getBonificacion().signum() > 0 ? this.pedidos.getBonificacion() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                bonificacionRecListField.focus();
+                listas.setEnabled(false);
+            } else if (RECARGAR_LABEL.equals(selectedOption)) {
+                esRecargoPedido.setValue(true);
+                esBonificacionPedido.setValue(false);
+                this.pedidos.setEsBonificacion(false);
+                this.pedidos.setEsRecargo(true);
+                this.isAplicarListas = false;
+                bonificacionRecListField.setEnabled(true);
+                bonificacionRecListField.focus();
+            } else if (APLICAR_LISTAS_LABEL.equals(selectedOption)) {
+                esBonificacionPedido.setValue(false);
+                esRecargoPedido.setValue(false);
+                this.pedidos.setEsBonificacion(false);
+                this.pedidos.setEsRecargo(false);
+
+                this.isAplicarListas = true;
+                calculateAndFillTotalPedido(pedidosItemsList);
+                bonificacionRecListField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                bonificacionRecListField.setEnabled(false);
+                listas.setEnabled(true);
+                listas.setEnabled(true);
+            } else if (NINGUNO_LABEL.equals(selectedOption)) {
+                esBonificacionPedido.setValue(false);
+                esRecargoPedido.setValue(false);
+                if(this.pedidos == null) this.pedidos = new Pedidos();
+                this.pedidos.setEsBonificacion(false);
+                this.pedidos.setEsRecargo(false);
+                this.isAplicarListas = false;
+                bonificacionRecListField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                bonificacionRecListField.setEnabled(false);
+                calculateAndFillTotalPedido(pedidosItemsList);
+                listas.setEnabled(false);
+            }
+            
+        });
+
+        if(pedidos !=null && pedidos.getIdPedido() != 0) {
+            if (pedidos.isEsBonificacion()) {
+                bonificacionRecargoListas.setValue(BONIFICACION_LABEL);
+                pedidos.setBonificacion(bonificacionRecListField.getValue());
+                bonificacionField.setValue(bonificacionRecListField.getValue());
+                recargoField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                pedidos.setRecargo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                pedidos.setEsBonificacion(true);
+                pedidos.setEsRecargo(false);
+                calculateAndFillTotalPedido(pedidosItemsList);
+            } else if (pedidos.isEsRecargo()) {
+                bonificacionRecargoListas.setValue(RECARGAR_LABEL);
+                BigDecimal recargoValue = this.pedidos.getRecargo().signum() > 0 ? this.pedidos.getRecargo() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+                bonificacionRecListField.setValue(recargoValue);
+                pedidos.setRecargo(bonificacionRecListField.getValue());
+                recargoField.setValue(bonificacionRecListField.getValue());
+                pedidos.setBonificacion(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                bonificacionField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                pedidos.setEsRecargo(true);
+                pedidos.setEsBonificacion(false);
+                calculateAndFillTotalPedido(pedidosItemsList);
+            } else if (pedList != null && !pedList.isEmpty()) {
+                bonificacionRecargoListas.setValue(APLICAR_LISTAS_LABEL);
+                pedidos.setBonificacion(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                pedidos.setRecargo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                bonificacionField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                recargoField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            } else {
+                bonificacionRecargoListas.setValue(NINGUNO_LABEL);
+                pedidos.setBonificacion(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                pedidos.setRecargo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                bonificacionField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                recargoField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            }
+            
+        } else {
+            bonificacionRecargoListas.setValue(NINGUNO_LABEL);
+        }
+        
+       
         ComponentUtils.setDecimalsOFields(bonificacionRecListField, 2);
         bonificacionRecListField.addValueChangeListener(event -> {
-            if (bonificacionRecListField.getValue() != null) {
-                if (esBonificacionPedido.getValue()) {
+            if (bonificacionRecListField.getValue() != null && pedidos != null) {
+                if (Boolean.TRUE.equals(esBonificacionPedido.getValue())) {
                     pedidos.setBonificacion(bonificacionRecListField.getValue());
                     bonificacionField.setValue(bonificacionRecListField.getValue());
+                    recargoField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                     pedidos.setRecargo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                     pedidos.setEsBonificacion(true);
                     pedidos.setEsRecargo(false);
                     calculateAndFillTotalPedido(pedidosItemsList);
-                } else if (esRecargoPedido.getValue()) {
+                } else if (esRecargoPedido.getValue().booleanValue()) {
                     pedidos.setRecargo(bonificacionRecListField.getValue());
                     recargoField.setValue(bonificacionRecListField.getValue());
                     pedidos.setBonificacion(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
@@ -503,72 +656,27 @@ public class PedidosView extends Div {
             }
         });
 
-        esBonificacionPedido = new Checkbox();
         esBonificacionPedido.setValue(false);
         esBonificacionPedido.setVisible(false);
 
-        esRecargoPedido = new Checkbox();
         esRecargoPedido.setVisible(false);
         esRecargoPedido.setValue(false);
-
-        bonificacionRecargoListas.addValueChangeListener(event -> {
-            String selectedOption = event.getValue();
-            if ("Bonificación(%)".equals(selectedOption)) {
-                esBonificacionPedido.setValue(true);
-                esRecargoPedido.setValue(false);
-                this.pedidos.setEsBonificacion(true);
-                this.pedidos.setEsRecargo(false);
-                this.isAplicarListas = false;
-                bonificacionRecListField.setEnabled(true);
-                bonificacionRecListField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-                bonificacionRecListField.focus();
-                listas.setEnabled(false);
-            } else if ("Recargo(%)".equals(selectedOption)) {
-                esRecargoPedido.setValue(true);
-                esBonificacionPedido.setValue(false);
-                this.pedidos.setEsBonificacion(false);
-                this.pedidos.setEsRecargo(true);
-                this.isAplicarListas = false;
-                bonificacionRecListField.setEnabled(true);
-                bonificacionRecListField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-                bonificacionRecListField.focus();
-                listas.setEnabled(false);
-            } else if ("Aplicar Listas".equals(selectedOption)) {
-                esBonificacionPedido.setValue(false);
-                esRecargoPedido.setValue(false);
-                this.pedidos.setEsBonificacion(false);
-                this.pedidos.setEsRecargo(false);
-
-                // se agrega esta funcion aca para que tome los valores por defectos de la lista
-                // de idarticulo
-                calculateAndFillTotalPedido(pedidosItemsList);
-                this.isAplicarListas = true;
-                bonificacionRecListField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-                bonificacionRecListField.setEnabled(false);
-                listas.setEnabled(true);
-                listas.focus();
-            } else if ("Ninguno".equals(selectedOption)) {
-                esBonificacionPedido.setValue(false);
-                esRecargoPedido.setValue(false);
-                this.pedidos.setEsBonificacion(false);
-                this.pedidos.setEsRecargo(false);
-                this.isAplicarListas = false;
-                bonificacionRecListField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-                bonificacionRecListField.setEnabled(false);
-                calculateAndFillTotalPedido(pedidosItemsList);
-                listas.setEnabled(false);
-            }
-        });
-
-        listas = new ComboBox<>();
         listas.setAllowCustomValue(true);
-        listas.getStyle().set("--vaadin-combo-box-overlay-width", "350px");
-        listas.setEnabled(false);
-        listas.setPlaceholder("Seleccione Lista");
-        listas.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
         listas.setItems(pedidosService.getAllListasPorc());
         listas.setItemLabelGenerator(listasPorcentuales -> listasPorcentuales.getLista().getDescripcion() + " "
                 + listasPorcentuales.getPorcentual().getDescripcion());
+        listas.getStyle().set("--vaadin-combo-box-overlay-width", "350px");
+        if(pedidos != null && pedidos.getIdPedido() != 0 && pedList != null && !pedList.isEmpty()
+            && pedList.get(0).getIdListas() != null && pedList.get(0).getIdListas().getLista() != null){
+            listas.setValue(pedList.get(0).getIdListas());
+            listas.setPlaceholder(pedList.get(0).getIdListas().getLista().getDescripcion() + " "
+                + pedList.get(0).getIdListas().getPorcentual().getDescripcion());
+        }else{
+            listas.setPlaceholder("Seleccione Lista");
+            listas.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
+        }
+        
+        
         listas.addValueChangeListener(event -> {
             ListasPorcentuales listaSelected = event.getValue();
             if (listaSelected.getPorcentual().getFinVigencia() != null) {
@@ -583,15 +691,6 @@ public class PedidosView extends Div {
             }
             calculateAndFillTotalPedido(pedidosItemsList);
         });
-
-        // precioArticulo = new BigDecimalField();
-        // precioArticulo.setVisible(false);
-        // this.pedidosItems.setPrecioArticulo(BigDecimal.ZERO);
-        // precioArticulo.addValueChangeListener(event -> {
-        // if (event.getValue() == null) {
-        // this.pedidosItems.setPrecioArticulo(BigDecimal.ZERO);
-        // }
-        // });
 
         idArticulo = new ComboBox<>("Articulos");
         idArticulo.setPlaceholder("Buscar Articulo");
@@ -610,16 +709,7 @@ public class PedidosView extends Div {
                                     .divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP)
                                     .add(precioCosto);
                             this.pedidosItems.setPrecioArticulo(calculatedPrice.setScale(2, RoundingMode.HALF_UP));
-                        } catch (ArithmeticException e) {
-                            this.pedidosItems.setPrecioArticulo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)); // Default
-                                                                                                                    // value
-                                                                                                                    // in
-                                                                                                                    // case
-                                                                                                                    // of
-                                                                                                                    // error
-                            Notification.show("Error al calcular el precio del artículo: " + e.getMessage(),
-                                    3000, Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                        } catch (IllegalStateException e) {
+                        } catch (ArithmeticException | IllegalStateException e) {
                             this.pedidosItems.setPrecioArticulo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)); // Default
                                                                                                                     // value
                                                                                                                     // in
@@ -661,41 +751,41 @@ public class PedidosView extends Div {
 
         esRecargo = new Checkbox();
         esRecargo.setVisible(false);
-        esRecargo.setValue(false);
-
         bonificacionRecargoArticulo = new RadioButtonGroup<>();
-        bonificacionRecargoArticulo.setValue("Ninguno"); // Allow no selection
-        bonificacionRecargoArticulo.setItems("Ninguno", "Bonificar(%)", "Recargar(%)");
-        bonificacion = new BigDecimalField();
-        bonificacion.setVisible(false);
-        ComponentUtils.setDecimalsOFields(bonificacion, 2);
-        recargo = new BigDecimalField();
-        recargo.setVisible(false);
-        ComponentUtils.setDecimalsOFields(recargo, 2);
+        bonificacionRecargoArticulo.setValue(NINGUNO_LABEL); // Allow no selection
+        bonificacionRecargoArticulo.setItems(NINGUNO_LABEL, BONIFICAR_LABEL, RECARGAR_LABEL);
+        // bonificacion = new BigDecimalField();
+        // bonificacion.setVisible(false);
+        // ComponentUtils.setDecimalsOFields(bonificacion, 2);
+        // recargo = new BigDecimalField();
+        // recargo.setVisible(false);
+        // ComponentUtils.setDecimalsOFields(recargo, 2);
         bonificacionRecArtField = new BigDecimalField();
         bonificacionRecArtField.setEnabled(false);
-        ComponentUtils.setDecimalsOFields(bonificacionRecArtField, 2);
+        if(bonificacionRecArtField.getValue() != null) {
+            ComponentUtils.setDecimalsOFields(bonificacionRecArtField, 2);
+        }else {
+            bonificacionRecArtField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+        }
         persistBonArt = new Checkbox("Persistir Bonificación en Articulo");
         persistBonArt.setEnabled(false);
         persistBonArt.setValue(false);
         bonificacionRecargoArticulo.addValueChangeListener(event -> {
             String selectedOption = event.getValue();
-
-            if ("Bonificar(%)".equals(selectedOption)) {
+            if (BONIFICAR_LABEL.equals(selectedOption)) {
                 esBonificacion.setValue(true);
+                esRecargo.setValue(false);
                 esRecargo.setValue(false);
                 bonificacionRecArtField.setEnabled(true);
                 bonificacionRecArtField.focus();
                 persistBonArt.setValue(false);
-                persistBonArt.setEnabled(true);
-            } else if ("Recargar(%)".equals(selectedOption)) {
+            } else if (RECARGAR_LABEL.equals(selectedOption)) {
                 esRecargo.setValue(true);
                 esBonificacion.setValue(false);
                 bonificacionRecArtField.setEnabled(true);
                 persistBonArt.setValue(false);
                 bonificacionRecArtField.focus();
-                persistBonArt.setEnabled(false);
-            } else if ("Ninguno".equals(selectedOption)) {
+            } else if (NINGUNO_LABEL.equals(selectedOption)) {
                 esBonificacion.setValue(false);
                 esRecargo.setValue(false);
                 bonificacionRecArtField.setEnabled(false);
@@ -704,6 +794,7 @@ public class PedidosView extends Div {
                 recargo.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                 bonificacion.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
             }
+            
         });
 
         agregarPedido = new Button("Agregar al Pedido", e -> {
@@ -719,7 +810,7 @@ public class PedidosView extends Div {
                 return;
             }
 
-            if (esBonificacion.getValue()) {
+            if (esBonificacion.getValue().booleanValue()) {
                 if (bonificacionRecArtField.getValue() != null) {
                     this.pedidosItems.setBonificacion(bonificacionRecArtField.getValue());
                     this.pedidosItems.setRecargo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
@@ -727,7 +818,7 @@ public class PedidosView extends Div {
                     this.pedidosItems.setBonificacion(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                     this.pedidosItems.setRecargo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                 }
-            } else if (esRecargo.getValue()) {
+            } else if (esRecargo.getValue().booleanValue()) {
                 if (bonificacionRecArtField.getValue() != null) {
                     this.pedidosItems.setRecargo(bonificacionRecArtField.getValue());
                     this.pedidosItems.setBonificacion(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
@@ -736,19 +827,19 @@ public class PedidosView extends Div {
                     this.pedidosItems.setBonificacion(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                 }
             }
-
             if (pedidosItems.isEsBonificacion()) {
                 boolean isError = validarBonificacionRecargoArticulo(pedidosItems.getBonificacion(),
-                        "Bonificar(%)");
+                            BONIFICAR_LABEL);
                 if (isError) {
                     return;
                 }
             } else if (pedidosItems.isEsRecargo()) {
-                boolean isError = validarBonificacionRecargoArticulo(pedidosItems.getRecargo(), "Recargar(%)");
+                boolean isError = validarBonificacionRecargoArticulo(pedidosItems.getRecargo(), RECARGAR_LABEL);
                 if (isError) {
                     return;
                 }
             }
+            
             PedidosItems pedItem = new PedidosItems();
             pedItem.setIdArticulo(pedidosItems.getIdArticulo());
             pedItem.setIdPedido(pedidosItems.getIdPedido());
@@ -773,7 +864,7 @@ public class PedidosView extends Div {
 
             gridPedidosItems.recalculateColumnWidths();
 
-            bonificacionRecargoArticulo.setValue("Ninguno");
+            bonificacionRecargoArticulo.setValue(NINGUNO_LABEL);
             bonificacionRecArtField.setValue(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
             initBinderPedidosItems();
         });
@@ -784,36 +875,35 @@ public class PedidosView extends Div {
         agregarPedido.setHeight(100, Unit.PERCENTAGE);
         gridPedidosItems = new Grid<>(PedidosItems.class, false);
         gridPedidosItems.setSelectionMode(Grid.SelectionMode.MULTI);
-        gridPedidosItems.addColumn(pedidosItems -> pedidosItems.getIdArticulo().getDescripcion())
+        gridPedidosItems.addColumn(pedItems -> pedItems.getIdArticulo().getDescripcion())
                 .setHeader("Articulo").setAutoWidth(true);
-        gridPedidosItems.addColumn(pedidosItems -> pedidosItems.getCantidad())
+        gridPedidosItems.addColumn(PedidosItems::getCantidad)
                 .setHeader("Cantidad").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
-        ;
-        gridPedidosItems.addColumn(pedidosItems -> pedidosItems.getIdArticulo().getIdAlicuota().getDescripcion())
+        gridPedidosItems.addColumn(pedItems -> pedItems.getIdArticulo().getIdAlicuota().getDescripcion())
                 .setHeader("Alicuota").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
-        ;
-        gridPedidosItems.addColumn(pedidosItems -> pedidosItems.getPrecioArticulo())
+        gridPedidosItems.addColumn(PedidosItems::getPrecioArticulo)
                 .setHeader("Precio Unitario").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
-        ;
         gridPedidosItems
-                .addColumn(pedidosItems -> pedidosItems.getBonificacion() != null
-                        ? pedidosItems.getBonificacion().setScale(2, RoundingMode.HALF_UP)
+                .addColumn(pedItems -> pedItems.getBonificacion() != null
+                        ? pedItems.getBonificacion().setScale(2, RoundingMode.HALF_UP)
                         : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP))
                 .setHeader("Bon.(%)").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
-        ;
         gridPedidosItems
                 .addColumn(
-                        pedidosItems -> pedidosItems.getRecargo() != null
-                                ? pedidosItems.getRecargo().setScale(2, RoundingMode.HALF_UP)
+                        pedItems -> pedItems.getRecargo() != null
+                                ? pedItems.getRecargo().setScale(2, RoundingMode.HALF_UP)
                                 : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP))
                 .setHeader("Rec.(%)").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
-        ;
-        gridPedidosItems.addColumn(pedidosItems -> ComponentUtils.calcSubTotalSinImp(pedidosItems))
+        gridPedidosItems.addColumn(pedItems -> ComponentUtils.calcSubTotalSinImp(pedItems))
                 .setHeader("Sub total-Imp").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
-        ;
-        gridPedidosItems.addColumn(pedidosItems -> ComponentUtils.calcSubTotalConImp(pedidosItems))
+        gridPedidosItems.addColumn(pedItems -> ComponentUtils.calcSubTotalConImp(pedItems))
                 .setHeader("Sub total+Imp").setAutoWidth(true).setTextAlign(ColumnTextAlign.END);
-        ;
+        
+        if(this.pedidos != null && this.pedidos.getIdPedido() != 0) {
+            pedidosItemsList = pedidosService.findPedidosItemsByIdPedidos(this.pedidos);
+            calculateAndFillTotalPedido(pedidosItemsList);
+        } 
+        
         gridPedidosItems.setItems(pedidosItemsList);
 
         gridPedidosItems.addSelectionListener(event -> {
@@ -826,26 +916,22 @@ public class PedidosView extends Div {
         notaAlPie = new TextArea("Nota al Pie");
         notaAlPie.setWidthFull();
         notaAlPie.setHeight(90, Unit.PIXELS);
-        bonificacionField = new BigDecimalField();
         bonificacionField.setWidthFull();
         bonificacionField.setReadOnly(true);
         ComponentUtils.setDecimalsOFields(bonificacionField, 2);
-        recargoField = new BigDecimalField();
         recargoField.setVisible(false);
         ComponentUtils.setDecimalsOFields(recargoField, 2);
-        subTotalSinImpuestos = new BigDecimalField();
         subTotalSinImpuestos.setWidthFull();
         subTotalSinImpuestos.setReadOnly(true);
         ComponentUtils.setDecimalsOFields(subTotalSinImpuestos, 2);
-        subTotalConIMpuestos = new BigDecimalField();
         subTotalConIMpuestos.setReadOnly(true);
         ComponentUtils.setDecimalsOFields(subTotalConIMpuestos, 2);
         subTotalConIMpuestos.setWidthFull();
-        totalPedido = new BigDecimalField();
+        
         ComponentUtils.setDecimalsOFields(totalPedido, 2);
         totalPedido.setWidthFull();
         cancelarAcciones = new Button("Cancelar Acciones", e -> {
-            bonificacionRecargoListas.setValue("Ninguno");
+            bonificacionRecargoListas.setValue(NINGUNO_LABEL);
 
         });
         cancelarAcciones.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
@@ -882,6 +968,11 @@ public class PedidosView extends Div {
                 }
 
                 binder.writeBean(this.pedidos);
+                if (pedidosItemsList.isEmpty()) {
+                    Notification.show("Debe agregar al menos un Articulo al pedido", 3000, Position.MIDDLE)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
+                }
 
                 pedidosItemsList.stream().filter(pi -> pi.isPersistBonArt())
                         .forEach(pi -> {
@@ -910,8 +1001,7 @@ public class PedidosView extends Div {
                 Notification.show(
                         "Error al Guardar/Modificar los datos. Revise Nuevamente que todos los datos sean Válidos");
             } catch (Exception except) {
-                if (except.getCause() != null && except.getCause().getCause() instanceof SQLException) {
-                    SQLException e1 = (SQLException) except.getCause().getCause();
+                if (except.getCause() != null && except.getCause().getCause() instanceof SQLException e1) {
                     if (e1.getMessage().contains("Ya existe la llave")) {
                         Notification n = Notification.show(
                                 "El Pedido " + this.pedidos.getIdPedido()
@@ -1072,12 +1162,12 @@ public class PedidosView extends Div {
                 ListasPorcentuales listPor = listas.getValue();
                 String clasificacion = listPor.getPorcentual().getClasificacion().getDisplayName();
                 BigDecimal porcentual = listPor.getPorcentual().getPorcentual();
-                if (listPor != null && "Bonificación".equals(clasificacion)) {
+                if ("Bonificación".equals(clasificacion)) {
                     subTotalConImp = subTotalConImp
                             .subtract(subTotalConImp.multiply(porcentual).divide(BigDecimal.valueOf(100)));
                     subTotalSinImp = subTotalSinImp
                             .subtract(subTotalSinImp.multiply(porcentual).divide(BigDecimal.valueOf(100)));
-                } else if (listPor != null && "Recargo".equals(clasificacion)) {
+                } else if ("Recargo".equals(clasificacion)) {
                     subTotalConImp = subTotalConImp
                             .add(subTotalConImp.multiply(porcentual).divide(BigDecimal.valueOf(100)));
                     subTotalSinImp = subTotalSinImp
@@ -1100,11 +1190,12 @@ public class PedidosView extends Div {
         gridPedidos.setItems(pedidosService.pedidosList());
     }
 
-    
     private void initBinderPedidos() {
-        this.pedidos = new Pedidos();
-        this.pedidosListas = new PedidosListas();
-        this.pedidos.setFechaPedido(LocalDate.now());
+        if (pedidos == null) {
+            this.pedidos = new Pedidos();
+            this.pedidosListas = new PedidosListas();
+            this.pedidos.setFechaPedido(LocalDate.now());
+        }
 
         configurePedidosBinder();
 
@@ -1120,9 +1211,9 @@ public class PedidosView extends Div {
         this.binderPedidosItems = new CollaborationBinder<>(PedidosItems.class, userInfo);
 
         this.binderPedidosItems.setSerializer(Articulos.class,
-                idarticulo -> String.valueOf(idarticulo.getIdArticulo()),
-                idArticulo -> pedidosService
-                        .findArticulosById(Integer.parseInt(idArticulo)));
+                idart -> String.valueOf(idart.getIdArticulo()),
+                idArt -> pedidosService
+                        .findArticulosById(Integer.parseInt(idArt)));
 
         configurePedidosItemsBinder();
 
@@ -1151,7 +1242,6 @@ public class PedidosView extends Div {
                                                                                         // convertir de Enum a String
                 )
                 .bind("plataforma");
-        // binder.forField(idPedido).bind("idPedido");
         this.pedidos.setEstadoPedido(EstadoPedidoEnum.En_Picking);
         this.binder.forField(estadoPedido, String.class)
                 .withConverter(
@@ -1188,14 +1278,12 @@ public class PedidosView extends Div {
                 .bind("estadoPago");
         this.binder.forField(idCliente).asRequired("Cliente es requerido")
                 .bind("idCliente");
-        this.binder.forField(fechaPedido).asRequired("Fecha es requerido")
-                .bind("fechaPedido");
         this.binder.forField(vendedores).asRequired("Vendedor es requerido")
                 .bind("idVendedor");
         this.binder.forField(domicilios).asRequired("Domicilio es requerido")
-                .bind("domicilios");
-        this.pedidos.setDomicilioClienteString(domicilioClienteString.getValue());
-        this.binder.forField(domicilioClienteString).bind("domicilioClienteString");
+                .bind("domicilioClienteString");
+        // this.pedidos.setDomicilioClienteString(domicilioClienteString.getValue());
+        // this.binder.forField(domicilioClienteString).bind("domicilioClienteString");
         this.binder.forField(esBonificacionPedido).bind("esBonificacion");
         this.binder.forField(esRecargoPedido).bind("esRecargo");
         this.binder.forField(bonificacionField).bind("bonificacion");
@@ -1255,56 +1343,34 @@ public class PedidosView extends Div {
     public String construirDireccion(Domicilios dom) {
         String calle = dom.getCalle();
         String numero = String.valueOf(dom.getNumero());
-        String barrio = dom.getBarrio();
-        String manzana = dom.getManzana();
-        String casa = dom.getCasa();
-        String sector = dom.getSector();
-        String depto = dom.getDepto();
-        String oficina = dom.getOficina();
-        String lote = dom.getLote();
-        Localidades localidad = dom.getLocalidad();
-        Provincias provincia = dom.getLocalidad().getDepartamentos().getProvincias();
         StringBuilder direccionBuilder = new StringBuilder();
-
+        direccionBuilder.append(dom.getIdDomicilio()).append(" - ");
         direccionBuilder.append(calle).append(" ").append(numero);
 
-        if (barrio != null && !barrio.isEmpty()) {
-            direccionBuilder.append(", Barrio ").append(barrio);
-        }
+        appendIfNotEmpty(direccionBuilder, dom.getBarrio(), ", Barrio ");
+        appendIfNotEmpty(direccionBuilder, dom.getManzana(), ", Manzana ");
+        appendIfNotEmpty(direccionBuilder, dom.getCasa(), ", Casa ");
+        appendIfNotEmpty(direccionBuilder, dom.getSector(), ", Sector ");
+        appendIfNotEmpty(direccionBuilder, dom.getDepto(), ", Depto ");
+        appendIfNotEmpty(direccionBuilder, dom.getOficina(), ", Oficina ");
+        appendIfNotEmpty(direccionBuilder, dom.getLote(), ", Lote ");
 
-        if (manzana != null && !manzana.isEmpty()) {
-            direccionBuilder.append(", Manzana ").append(manzana);
-        }
-
-        if (casa != null && !casa.isEmpty()) {
-            direccionBuilder.append(", Casa ").append(casa);
-        }
-
-        if (sector != null && !sector.isEmpty()) {
-            direccionBuilder.append(", Sector ").append(sector);
-        }
-
-        if (depto != null && !depto.isEmpty()) {
-            direccionBuilder.append(", Depto ").append(depto);
-        }
-
-        if (oficina != null && !oficina.isEmpty()) {
-            direccionBuilder.append(", Oficina ").append(oficina);
-        }
-
-        if (lote != null && !lote.isEmpty()) {
-            direccionBuilder.append(", Lote ").append(lote);
-        }
-
+        Localidades localidad = dom.getLocalidad();
         if (localidad != null) {
             direccionBuilder.append(", ").append(localidad.getNombre());
-        }
-
-        if (provincia != null) {
-            direccionBuilder.append(", ").append(provincia.getProvincia());
+            Provincias provincia = localidad.getDepartamentos() != null ? localidad.getDepartamentos().getProvincias() : null;
+            if (provincia != null) {
+                direccionBuilder.append(", ").append(provincia.getProvincia());
+            }
         }
 
         return direccionBuilder.toString();
+    }
+
+    private void appendIfNotEmpty(StringBuilder builder, String value, String label) {
+        if (value != null && !value.isEmpty()) {
+            builder.append(label).append(value);
+        }
     }
 
 }

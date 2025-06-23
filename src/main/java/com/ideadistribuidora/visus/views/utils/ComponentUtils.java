@@ -138,13 +138,14 @@ public class ComponentUtils {
     }
 
     public static void setDecimalsOFields(BigDecimalField field, int number) {
-        field.setValue(BigDecimal.ZERO.setScale(number, RoundingMode.HALF_UP));
-        field.addValueChangeListener(e -> {
-            if (field.getValue() != null) {
-                BigDecimal value = field.getValue().setScale(number, RoundingMode.HALF_UP);
-                field.setValue(value);
-            }
-        });
+        //field.setValue(BigDecimal.ZERO.setScale(number, RoundingMode.HALF_UP));
+        field.setValue(field != null ? field.getValue().setScale(number, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(number, RoundingMode.HALF_UP));
+        // field.addValueChangeListener(e -> {
+        //     if (field.getValue() != null) {
+        //         BigDecimal value = field.getValue().setScale(number, RoundingMode.HALF_UP);
+        //         field.setValue(value);
+        //     }
+        // });
     }
 
     public static BigDecimal calcSubTotalConImp(PedidosItems pedidosItems2) {
